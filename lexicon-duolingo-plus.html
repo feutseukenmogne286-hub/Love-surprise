@@ -1,0 +1,3563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lexicon</title>
+<meta name="description" content="Lexicon is a minimalist vocabulary quiz web app with bilingual English/French play.">
+<meta name="theme-color" content="#0D0D0D">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --white: #FFFFFF;
+    --off-white: #FAFAFA;
+    --grey-50: #F5F5F5;
+    --grey-100: #EFEFEF;
+    --grey-200: #E0E0E0;
+    --grey-300: #C4C4C4;
+    --grey-400: #9E9E9E;
+    --grey-500: #757575;
+    --grey-600: #545454;
+    --grey-700: #333333;
+    --grey-900: #1A1A1A;
+    --black: #0D0D0D;
+    --green: #2A9D5C;
+    --green-light: #E8F5EE;
+    --green-bg: #F0FBF4;
+    --red: #D94141;
+    --red-light: #FDECEC;
+    --red-bg: #FFF5F5;
+    --amber: #E5A100;
+    --amber-light: #FFF8E1;
+    --blue: #2D6BE4;
+    --blue-light: #EBF1FD;
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  html { font-size: 16px; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--white);
+    color: var(--grey-900);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ---- LAYOUT ---- */
+  .app {
+    max-width: 620px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0 24px;
+  }
+
+  /* ---- HEADER ---- */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 20px;
+    border-bottom: 1px solid var(--grey-100);
+    gap: 12px;
+  }
+
+  .logo {
+    font-family: var(--serif);
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    color: var(--black);
+    line-height: 1;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .logo em {
+    font-style: italic;
+    color: var(--grey-400);
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  /* ---- LANGUAGE TOGGLE ---- */
+  .lang-toggle {
+    display: flex;
+    background: var(--grey-50);
+    border-radius: 100px;
+    padding: 3px;
+    position: relative;
+    user-select: none;
+  }
+
+  .lang-opt {
+    position: relative;
+    z-index: 2;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--grey-400);
+    cursor: pointer;
+    transition: color 0.25s ease;
+    letter-spacing: 0.02em;
+    border-radius: 100px;
+    line-height: 1.2;
+  }
+
+  .lang-opt.active {
+    color: var(--grey-900);
+  }
+
+  .lang-slider {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    height: calc(100% - 6px);
+    background: var(--white);
+    border-radius: 100px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1;
+  }
+
+  .score-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--grey-600);
+    background: var(--grey-50);
+    padding: 6px 14px;
+    border-radius: 100px;
+    letter-spacing: 0.01em;
+  }
+
+  .score-pill .num {
+    font-weight: 700;
+    color: var(--grey-900);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---- LIVES ---- */
+  .lives {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  .life-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--grey-900);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .life-dot.lost {
+    background: var(--grey-200);
+    transform: scale(0.7);
+  }
+
+  /* ---- SCREENS ---- */
+  .screen {
+    display: none;
+    flex: 1;
+    flex-direction: column;
+  }
+
+  .screen.active {
+    display: flex;
+  }
+
+  /* ---- HOME SCREEN ---- */
+  .home-hero {
+    padding: 56px 0 24px;
+    text-align: center;
+  }
+
+  .home-hero h1 {
+    font-family: var(--serif);
+    font-size: 54px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    color: var(--black);
+    margin-bottom: 16px;
+  }
+
+  .home-hero h1 em {
+    font-style: italic;
+    color: var(--grey-400);
+  }
+
+  .home-hero p {
+    font-size: 16px;
+    color: var(--grey-500);
+    line-height: 1.6;
+    max-width: 400px;
+    margin: 0 auto;
+    font-weight: 400;
+  }
+
+  /* ---- BEST SCORES STRIP ---- */
+  .best-strip {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 0 0 32px;
+    flex-wrap: wrap;
+  }
+
+  .best-chip {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--grey-400);
+  }
+
+  .best-chip .val {
+    font-family: var(--serif);
+    font-size: 20px;
+    color: var(--grey-900);
+    line-height: 1;
+  }
+
+  .best-chip .lbl {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--grey-400);
+    margin-bottom: 16px;
+  }
+
+
+  .home-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .search-input {
+    width: 100%;
+    height: 46px;
+    border: 1.5px solid var(--grey-200);
+    border-radius: 14px;
+    padding: 0 16px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--grey-900);
+    background: var(--white);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    outline: none;
+  }
+
+  .search-input::placeholder {
+    color: var(--grey-400);
+  }
+
+  .search-input:focus {
+    border-color: var(--grey-900);
+    box-shadow: 0 0 0 4px rgba(45, 107, 228, 0.08);
+  }
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .file-trigger {
+    cursor: pointer;
+  }
+
+
+  .btn-secondary[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary[disabled]:hover {
+    border-color: var(--grey-200);
+    color: var(--grey-600);
+    transform: none;
+  }
+
+  .file-name {
+    min-height: 20px;
+    margin-top: 8px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--grey-500);
+  }
+
+  .file-name.ready {
+    color: var(--grey-700);
+  }
+
+
+  .import-status {
+    min-height: 20px;
+    margin-top: 10px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--grey-500);
+  }
+
+  .import-status.success {
+    color: var(--green);
+  }
+
+  .import-status.error {
+    color: var(--red);
+  }
+
+  .btn-compact {
+    padding: 11px 16px;
+    font-size: 13px;
+    border-radius: 14px;
+    min-height: 46px;
+  }
+
+  .library-note {
+    font-size: 13px;
+    color: var(--grey-500);
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+
+  .no-results {
+    text-align: center;
+    background: var(--grey-50);
+    border: 1px dashed var(--grey-200);
+    border-radius: 16px;
+    padding: 20px;
+    color: var(--grey-500);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 32px;
+  }
+
+  .categories-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding-bottom: 48px;
+  }
+
+  .cat-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 20px;
+    background: var(--white);
+    border: 1.5px solid var(--grey-100);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    outline: none;
+  }
+
+  .cat-btn:hover {
+    border-color: var(--grey-900);
+    background: var(--grey-50);
+  }
+
+  .cat-btn:active {
+    transform: scale(0.97);
+  }
+
+  .cat-icon {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .cat-text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cat-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--grey-900);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cat-count {
+    font-size: 12px;
+    color: var(--grey-400);
+    font-weight: 400;
+  }
+
+  .cat-tagline {
+    margin-top: 5px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--grey-500);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .cat-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 999px;
+    background: var(--grey-50);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--grey-500);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 6px;
+  }
+
+  .cat-best {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--grey-300);
+    line-height: 1;
+  }
+
+  .cat-best.filled {
+    color: var(--grey-900);
+  }
+
+  /* ---- GAME SCREEN ---- */
+  .game-top {
+    padding: 40px 0 0;
+    text-align: center;
+  }
+
+  .word-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 14px;
+    margin: 0 auto 2px;
+  }
+
+  .word-stack {
+    min-width: 0;
+  }
+
+  .round-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+
+  .round-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey-400);
+  }
+
+  .difficulty-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+    margin-bottom: 28px;
+  }
+
+  .diff-easy { background: var(--green-light); color: var(--green); }
+  .diff-medium { background: var(--amber-light); color: var(--amber); }
+  .diff-hard { background: var(--red-light); color: var(--red); }
+
+  .word-display {
+    font-family: var(--serif);
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--black);
+    margin-bottom: 6px;
+    min-height: 58px;
+  }
+
+  .word-pos {
+    font-size: 14px;
+    font-style: italic;
+    color: var(--grey-400);
+    margin-bottom: 10px;
+  }
+
+  .pronounce-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 14px;
+    margin-top: 8px;
+    border: 1.5px solid var(--grey-200);
+    border-radius: 999px;
+    background: var(--white);
+    color: var(--grey-600);
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+
+  .pronounce-btn:hover:not(:disabled) {
+    border-color: var(--grey-900);
+    color: var(--grey-900);
+    background: var(--grey-50);
+  }
+
+  .pronounce-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .pronounce-meta {
+    min-height: 20px;
+    margin-bottom: 28px;
+    font-size: 12px;
+    color: var(--grey-400);
+    letter-spacing: 0.02em;
+  }
+
+  .choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 20px;
+  }
+
+  .choice-btn {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 20px 22px;
+    background: var(--white);
+    border: 1.5px solid var(--grey-200);
+    border-radius: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+    outline: none;
+    font-family: var(--sans);
+  }
+
+  .choice-btn:hover:not(.disabled) {
+    border-color: var(--grey-900);
+    background: var(--grey-50);
+  }
+
+  .choice-btn:active:not(.disabled) {
+    transform: scale(0.985);
+  }
+
+  .choice-key {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: var(--grey-50);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--grey-500);
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.2s ease;
+  }
+
+  .choice-text {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--grey-700);
+    font-weight: 400;
+  }
+
+  .choice-btn.correct {
+    border-color: var(--green);
+    background: var(--green-bg);
+    animation: choiceCorrect 0.35s cubic-bezier(0.2, 0, 0.1, 1);
+  }
+  .choice-btn.correct .choice-key { background: var(--green); color: white; }
+  .choice-btn.correct .choice-text { color: #1a7a42; font-weight: 500; }
+
+  @keyframes choiceCorrect {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+  }
+
+  .choice-btn.wrong {
+    border-color: var(--red);
+    background: var(--red-bg);
+  }
+  .choice-btn.wrong .choice-key { background: var(--red); color: white; }
+  .choice-btn.wrong .choice-text { color: var(--red); font-weight: 500; }
+
+  .choice-btn.reveal-correct {
+    border-color: var(--green);
+    background: var(--green-bg);
+    opacity: 0.7;
+  }
+  .choice-btn.reveal-correct .choice-key { background: var(--green); color: white; }
+
+  .choice-btn.hidden-hint {
+    pointer-events: none;
+    border-color: var(--grey-100);
+    border-style: dashed;
+    background: var(--off-white);
+  }
+  .choice-btn.hidden-hint .choice-text {
+    text-decoration: line-through;
+    text-decoration-color: var(--grey-300);
+    text-decoration-thickness: 1.5px;
+    color: var(--grey-300);
+  }
+  .choice-btn.hidden-hint .choice-key {
+    background: var(--grey-100);
+    color: var(--grey-300);
+  }
+
+  .choice-btn.disabled { cursor: default; opacity: 0.5; }
+  .choice-btn.correct.disabled,
+  .choice-btn.wrong.disabled,
+  .choice-btn.reveal-correct.disabled { opacity: 1; }
+
+  /* ---- HINT BAR ---- */
+  .hint-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 8px;
+  }
+
+  .hint-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1.5px solid var(--grey-200);
+    border-radius: 100px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--grey-600);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+
+  .hint-btn:hover:not(:disabled) {
+    border-color: var(--grey-900);
+    color: var(--grey-900);
+  }
+
+  .hint-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .hint-btn .icon {
+    font-size: 11px;
+  }
+
+  .hint-dots {
+    display: flex;
+    gap: 3px;
+  }
+
+  .hint-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--grey-900);
+    transition: all 0.3s ease;
+  }
+
+  .hint-dot.used {
+    background: var(--grey-200);
+  }
+
+  /* ---- USAGE REVEAL (after answer) ---- */
+  .usage-reveal {
+    background: var(--grey-50);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: var(--grey-600);
+    font-style: italic;
+    line-height: 1.6;
+    border-left: 3px solid var(--grey-300);
+    display: none;
+  }
+
+  .usage-reveal.show {
+    display: block;
+    animation: fadeInUp 0.4s cubic-bezier(0.2, 0, 0.1, 1);
+  }
+
+  .usage-reveal.correct-style { border-left-color: var(--green); background: var(--green-bg); }
+  .usage-reveal.wrong-style { border-left-color: var(--red); background: var(--red-bg); }
+
+  /* ---- PROGRESS BAR ---- */
+  .progress-wrap {
+    padding: 20px 0 0;
+  }
+
+  .progress-bar-bg {
+    width: 100%;
+    height: 4px;
+    background: var(--grey-100);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--grey-900);
+    border-radius: 4px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 0%;
+  }
+
+  /* ---- RESULT SCREEN ---- */
+  .result-screen {
+    text-align: center;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 40px 0 48px;
+  }
+
+  .result-icon {
+    font-size: 56px;
+    margin-bottom: 24px;
+    line-height: 1;
+  }
+
+  .result-title {
+    font-family: var(--serif);
+    font-size: 40px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+    color: var(--black);
+    margin-bottom: 8px;
+    line-height: 1.1;
+  }
+
+  .result-subtitle {
+    font-size: 16px;
+    color: var(--grey-500);
+    margin-bottom: 36px;
+    line-height: 1.5;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .result-stats {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 12px;
+  }
+
+  .stat { text-align: center; }
+
+  .stat-num {
+    font-family: var(--serif);
+    font-size: 36px;
+    color: var(--black);
+    line-height: 1.1;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--grey-400);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+
+  .record-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--amber);
+    background: var(--amber-light);
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 28px;
+    letter-spacing: 0.02em;
+  }
+
+  .record-spacer { height: 28px; }
+
+  /* Last word review */
+  .review-card {
+    text-align: left;
+    background: var(--grey-50);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 32px;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+
+  .review-card-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey-400);
+    margin-bottom: 12px;
+  }
+
+  .review-word {
+    font-family: var(--serif);
+    font-size: 30px;
+    color: var(--black);
+    margin-bottom: 4px;
+  }
+
+  .review-pos {
+    font-size: 13px;
+    color: var(--grey-400);
+    font-style: italic;
+    margin-bottom: 14px;
+  }
+
+  .review-def {
+    font-size: 15px;
+    color: var(--grey-700);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .review-usage {
+    font-size: 14px;
+    color: var(--grey-500);
+    font-style: italic;
+    line-height: 1.6;
+    padding-left: 16px;
+    border-left: 2px solid var(--grey-200);
+  }
+
+  /* Buttons */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 15px 40px;
+    background: var(--grey-900);
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-primary:hover {
+    background: var(--black);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active {
+    transform: scale(0.97);
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 32px;
+    background: transparent;
+    color: var(--grey-600);
+    border: 1.5px solid var(--grey-200);
+    border-radius: 12px;
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--grey-400);
+    color: var(--grey-900);
+  }
+
+  .result-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  /* ---- CONTINUE BANNER ---- */
+  .continue-bar {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 0 32px;
+  }
+
+  .continue-bar.show {
+    display: flex;
+  }
+
+  /* ---- STREAK TOAST ---- */
+  .streak-toast {
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-60px);
+    background: var(--grey-900);
+    color: var(--white);
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 20px;
+    border-radius: 100px;
+    opacity: 0;
+    transition: all 0.35s cubic-bezier(0.2, 0, 0.1, 1);
+    z-index: 100;
+    pointer-events: none;
+    letter-spacing: 0.02em;
+  }
+
+  .streak-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ---- FOOTER ---- */
+  footer {
+    padding: 20px 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--grey-300);
+    margin-top: auto;
+  }
+
+  /* ---- ANIMATIONS ---- */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  .anim-fade-up {
+    animation: fadeInUp 0.45s cubic-bezier(0.2, 0, 0.1, 1) forwards;
+    opacity: 0;
+  }
+
+  .anim-shake {
+    animation: shake 0.4s ease;
+  }
+
+  /* Stagger */
+  .stagger-1 { animation-delay: 0.04s; }
+  .stagger-2 { animation-delay: 0.08s; }
+  .stagger-3 { animation-delay: 0.12s; }
+  .stagger-4 { animation-delay: 0.16s; }
+  .stagger-5 { animation-delay: 0.20s; }
+  .stagger-6 { animation-delay: 0.24s; }
+  .stagger-7 { animation-delay: 0.28s; }
+  .stagger-8 { animation-delay: 0.32s; }
+  .stagger-9 { animation-delay: 0.36s; }
+  .stagger-10 { animation-delay: 0.40s; }
+
+  /* Keyboard hint */
+  .kb-hint {
+    text-align: center;
+    font-size: 12px;
+    color: var(--grey-300);
+    padding: 8px 0 0;
+  }
+
+  .kb-hint kbd {
+    display: inline-block;
+    padding: 2px 7px;
+    background: var(--grey-50);
+    border: 1px solid var(--grey-200);
+    border-radius: 4px;
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--grey-500);
+    margin: 0 1px;
+  }
+
+
+  /* ---- ACCESSIBILITY + POLISH ---- */
+  html { scroll-behavior: smooth; }
+  body { line-height: 1.45; }
+
+  .skip-link {
+    position: absolute;
+    left: 20px;
+    top: -44px;
+    background: var(--grey-900);
+    color: var(--white);
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    z-index: 200;
+    transition: top 0.2s ease;
+  }
+
+  .skip-link:focus {
+    top: 20px;
+  }
+
+  button:focus-visible,
+  .logo:focus-visible,
+  .lang-opt:focus-visible,
+  .cat-btn:focus-visible,
+  .choice-btn:focus-visible,
+  .hint-btn:focus-visible,
+  .btn-primary:focus-visible,
+  .btn-secondary:focus-visible,
+  .search-input:focus-visible,
+  .pronounce-btn:focus-visible {
+    outline: 3px solid rgba(45, 107, 228, 0.22);
+    outline-offset: 2px;
+  }
+
+  .visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0);
+    white-space: nowrap; border: 0;
+  }
+
+  .app {
+    position: relative;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    background: rgba(255,255,255,0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 40;
+  }
+
+  .score-pill,
+  .lang-toggle,
+  .cat-btn,
+  .choice-btn,
+  .review-card,
+  .usage-reveal {
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+
+  .cat-btn:hover,
+  .choice-btn:hover:not(.disabled),
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    box-shadow: 0 10px 24px rgba(0,0,0,0.05);
+  }
+
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 12px 0 0;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--grey-400);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .game-meta-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--grey-50);
+    border: 1px solid var(--grey-100);
+    border-radius: 100px;
+    padding: 6px 10px;
+    font-weight: 600;
+  }
+
+  .result-meta {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--grey-400);
+  }
+
+  .accuracy-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    background: var(--blue-light);
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 24px;
+  }
+
+  .cat-btn[aria-current="true"] {
+    border-color: var(--grey-900);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+
+  /* ---- DUOLINGO-STYLE LAYER ---- */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin: 18px 0 16px;
+  }
+
+  .metric-card {
+    border: 1px solid var(--grey-100);
+    border-radius: 22px;
+    background: linear-gradient(180deg, var(--white), var(--off-white));
+    padding: 16px;
+    min-height: 112px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 10px 30px rgba(13, 13, 13, 0.035);
+  }
+
+  .metric-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .metric-label {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--grey-500);
+    font-weight: 700;
+  }
+
+  .metric-num {
+    font-size: 28px;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--black);
+    font-weight: 700;
+  }
+
+  .metric-sub {
+    margin-top: 6px;
+    color: var(--grey-500);
+    line-height: 1.45;
+    font-size: 13px;
+  }
+
+  .goal-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 100px;
+    background: var(--grey-100);
+    overflow: hidden;
+    margin-top: 10px;
+  }
+
+  .goal-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--blue), var(--green));
+  }
+
+  .quick-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .quick-btn {
+    appearance: none;
+    border: 1px solid var(--grey-100);
+    background: var(--white);
+    color: var(--grey-700);
+    border-radius: 100px;
+    padding: 10px 14px;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    box-shadow: 0 4px 16px rgba(13,13,13,0.03);
+  }
+
+  .quick-btn:hover,
+  .quick-btn:focus-visible {
+    transform: translateY(-1px);
+    border-color: var(--grey-300);
+    color: var(--grey-900);
+    box-shadow: 0 8px 18px rgba(13,13,13,0.07);
+  }
+
+  .quick-btn.primary {
+    background: var(--black);
+    color: var(--white);
+    border-color: var(--black);
+  }
+
+  .quick-btn[hidden] { display:none !important; }
+
+  .quick-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .prefs-panel {
+    border: 1px solid var(--grey-100);
+    border-radius: 24px;
+    padding: 18px;
+    background: linear-gradient(180deg, #FFFFFF, #FAFAFA);
+    box-shadow: 0 14px 36px rgba(13,13,13,0.04);
+    margin-bottom: 18px;
+  }
+
+  .prefs-head {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+
+  .prefs-title {
+    font-size: 18px;
+    letter-spacing: -0.02em;
+    color: var(--black);
+    font-weight: 700;
+  }
+
+  .prefs-sub {
+    font-size: 13px;
+    color: var(--grey-500);
+    line-height: 1.5;
+  }
+
+  .prefs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .prefs-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .prefs-field.full {
+    grid-column: 1 / -1;
+  }
+
+  .prefs-field span {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--grey-600);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .prefs-input,
+  .prefs-select {
+    border: 1px solid var(--grey-200);
+    border-radius: 16px;
+    background: var(--white);
+    color: var(--grey-900);
+    padding: 12px 14px;
+    font: inherit;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .prefs-input:focus,
+  .prefs-select:focus,
+  .prefs-range:focus-visible {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(45,107,228,0.12);
+  }
+
+  .prefs-range-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .prefs-range {
+    width: 100%;
+    accent-color: var(--blue);
+  }
+
+  .prefs-note {
+    font-size: 12px;
+    color: var(--grey-500);
+    line-height: 1.45;
+  }
+
+  .xp-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--grey-600);
+    background: var(--grey-50);
+    padding: 6px 14px;
+    border-radius: 100px;
+    letter-spacing: 0.01em;
+  }
+
+  .xp-pill .num {
+    font-weight: 700;
+    color: var(--grey-900);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .session-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 100px;
+    background: var(--green-light);
+    color: var(--green);
+    font-size: 12px;
+    font-weight: 700;
+    margin-top: 14px;
+  }
+
+  @media (max-width: 640px) {
+    .dashboard-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .prefs-grid { grid-template-columns: 1fr; }
+    .quick-actions { flex-direction: column; }
+  }
+
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 640px) {
+    .app { padding: 0 18px; }
+    header { padding: 22px 0 18px; gap: 8px; }
+    .logo { font-size: 24px; }
+    .home-hero h1 { font-size: 40px; }
+    .home-hero { padding: 44px 0 20px; }
+    .word-display { font-size: 36px; }
+    .categories-grid { grid-template-columns: 1fr; }
+    .result-stats { gap: 28px; }
+    .result-title { font-size: 32px; }
+    .header-right { gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .score-pill { padding: 5px 10px; font-size: 12px; }
+    .xp-pill { padding: 5px 10px; font-size: 12px; }
+    .lang-opt { padding: 5px 10px; font-size: 11px; }
+    .best-strip { gap: 18px; }
+    .home-toolbar { flex-direction: column; align-items: stretch; }
+    .toolbar-actions { justify-content: stretch; }
+    .toolbar-actions > * { width: 100%; }
+    .word-head { flex-direction: column; align-items: center; gap: 4px; }
+    .pronounce-btn { margin-top: 0; }
+  }
+</style>
+</head>
+<body>
+<a href="#homeScreen" class="skip-link">Skip to content</a>
+<div class="visually-hidden" aria-live="polite" aria-atomic="true" id="srAnnouncer"></div>
+
+<div class="app" id="app">
+
+  <!-- HEADER -->
+  <header id="header">
+    <div class="logo" onclick="goHome()" tabindex="0" role="button" aria-label="Go to Lexicon home">Lexicon<em>.</em></div>
+    <div class="header-right" id="headerHome">
+      <div class="lang-toggle" id="langToggle">
+        <div class="lang-slider" id="langSlider"></div>
+        <div class="lang-opt" data-lang="en" tabindex="0" role="button" aria-label="Switch language to English">EN</div>
+        <div class="lang-opt" data-lang="fr" tabindex="0" role="button" aria-label="Passer la langue en français">FR</div>
+      </div>
+    </div>
+    <div class="header-right" id="headerGame" style="display:none;">
+      <div class="xp-pill"><span id="xpLabel">XP today</span> <span class="num" id="xpTodayDisplay">0 / 60</span></div>
+      <div class="score-pill"><span id="scoreLabel">Score</span> <span class="num" id="scoreDisplay">0</span></div>
+      <div class="lives" id="livesDisplay"></div>
+    </div>
+  </header>
+
+  <!-- HOME SCREEN -->
+  <div class="screen active" id="homeScreen">
+    <div class="home-hero">
+      <h1 class="anim-fade-up" id="heroTitle"></h1>
+      <p class="anim-fade-up stagger-2" id="heroSub"></p>
+    </div>
+    <div class="best-strip anim-fade-up stagger-3" id="bestStrip"></div>
+    <div class="dashboard-grid anim-fade-up stagger-3" id="dashboardGrid"></div>
+    <div class="quick-actions anim-fade-up stagger-3">
+      <button class="quick-btn primary" id="randomMixBtn" type="button">Random mix</button>
+      <button class="quick-btn" id="reviewModeBtn" type="button">Review mistakes</button>
+      <button class="quick-btn" id="clearReviewBtn" type="button">Clear review</button>
+    </div>
+    <div class="prefs-panel anim-fade-up stagger-3" id="prefsPanel">
+      <div class="prefs-head">
+        <div class="prefs-title" id="prefsTitle">Customize your practice</div>
+        <div class="prefs-sub" id="prefsSub">Make Lexicon feel more like your own learning path.</div>
+      </div>
+      <div class="prefs-grid">
+        <label class="prefs-field">
+          <span id="profileNameLabel">Display name</span>
+          <input class="prefs-input" id="profileNameInput" type="text" maxlength="24" autocomplete="name" placeholder="Alane">
+        </label>
+        <label class="prefs-field">
+          <span id="dailyGoalLabel">Daily XP goal</span>
+          <select class="prefs-select" id="dailyGoalSelect">
+            <option value="30">30 XP</option>
+            <option value="60">60 XP</option>
+            <option value="100">100 XP</option>
+            <option value="150">150 XP</option>
+          </select>
+        </label>
+        <label class="prefs-field">
+          <span id="modeLabel">Lesson mode</span>
+          <select class="prefs-select" id="modeSelect">
+            <option value="classic">Classic</option>
+            <option value="challenge">Challenge</option>
+          </select>
+          <div class="prefs-note" id="modeNote">10 rounds · 2 hints · balanced pace</div>
+        </label>
+        <label class="prefs-field">
+          <span id="voiceRateLabel">Voice speed</span>
+          <div class="prefs-range-wrap">
+            <input class="prefs-range" id="voiceRateInput" type="range" min="0.75" max="1.15" step="0.05" value="0.95">
+            <strong id="voiceRateValue">0.95×</strong>
+          </div>
+          <div class="prefs-note" id="voiceRateNote">Adjust text-to-speech for diverse readers and learners.</div>
+        </label>
+      </div>
+    </div>
+    <div class="section-label anim-fade-up stagger-3" id="sectionLabel"></div>
+    <div class="home-toolbar anim-fade-up stagger-3">
+      <div class="search-wrap">
+        <label class="visually-hidden" for="subjectSearch" id="subjectSearchLabel">Search subjects</label>
+        <input type="search" id="subjectSearch" class="search-input" autocomplete="off">
+      </div>
+      <div class="toolbar-actions">
+        <label class="btn-secondary btn-compact file-trigger" for="packFileInput" id="importPackLabel">Choose file</label>
+        <button class="btn-secondary btn-compact" id="importPackBtn" type="button" disabled>Import selected</button>
+        <button class="btn-secondary btn-compact" id="starterPackBtn" type="button">Load starter pack</button>
+        <input type="file" id="packFileInput" accept=".json,application/json" class="visually-hidden">
+      </div>
+    </div>
+    <div class="file-name anim-fade-up stagger-3" id="fileNameStatus" aria-live="polite"></div>
+    <div class="import-status anim-fade-up stagger-3" id="importStatus" aria-live="polite"></div>
+    <div class="library-note anim-fade-up stagger-3" id="libraryNote"></div>
+    <div class="categories-grid" id="categoriesGrid"></div>
+    <div class="no-results" id="noResults" hidden></div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="gameScreen">
+    <div class="progress-wrap">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+      <div class="progress-meta">
+        <div class="game-meta-chip" id="progressText">Round 1 / 10</div>
+        <div class="game-meta-chip" id="streakChip">Streak 0</div>
+      </div>
+    </div>
+    <div class="game-top">
+      <div class="round-row">
+        <div class="round-label" id="roundLabel"></div>
+      </div>
+      <div class="difficulty-label diff-easy" id="diffLabel"></div>
+      <div class="word-head">
+        <div class="word-stack">
+          <div class="word-display" id="wordDisplay"></div>
+          <div class="word-pos" id="wordPos"></div>
+        </div>
+        <button class="pronounce-btn" id="pronounceBtn" type="button" onclick="speakCurrentWord()" aria-label="Listen to the current word">
+          <span aria-hidden="true">🔊</span>
+          <span id="pronounceBtnText">Listen</span>
+        </button>
+      </div>
+      <div class="pronounce-meta" id="pronounceMeta"></div>
+    </div>
+    <div class="choices" id="choicesContainer"></div>
+    <div class="usage-reveal" id="usageReveal"></div>
+    <div class="hint-bar" id="hintBar">
+      <button class="hint-btn" id="hintBtn" onclick="useHint()">
+        <span class="icon">⚡</span>
+        <span id="hintBtnLabel">Hint</span>
+        <span class="hint-dots" id="hintDots"></span>
+      </button>
+    </div>
+    <div class="kb-hint" id="kbHint"></div>
+    <div class="continue-bar" id="continueBar">
+      <button class="btn-primary" id="continueBtn" onclick="nextRound()">Continue →</button>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen result-screen" id="resultScreen">
+    <div id="resultContent"></div>
+  </div>
+
+  <div class="streak-toast" id="streakToast"></div>
+  <footer id="footerText"></footer>
+</div>
+
+<script>
+// ============================================================
+// I18N — Interface strings
+// ============================================================
+const I18N = {
+  en: {
+    heroTitle: 'Master your<br><em>vocabulary</em>',
+    heroSub: 'Choose a subject and test your knowledge — one definition at a time.',
+    sectionLabel: 'Pick a subject',
+    wordsLabel: 'words',
+    scoreLabel: 'Score',
+    round: 'Round',
+    easy: 'Easy', medium: 'Medium', hard: 'Hard',
+    continue: 'Continue →',
+    hint: 'Hint',
+    kbHint: 'Press <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> to choose · <kbd>H</kbd> hint · <kbd>S</kbd> listen · <kbd>Enter</kbd> to continue',
+    wellDone: 'Well done',
+    gameOver: 'Game over',
+    resultWin: (cat, lives, s) => `You completed ${cat} with ${lives} ${lives === 1 ? 'life' : 'lives'} remaining.`,
+    resultLoss: (cat, round) => `You reached round ${round} in ${cat}.`,
+    score: 'Score', correct: 'Correct', strikes: 'Strikes',
+    lastCorrect: 'Last answer — Correct',
+    lastIncorrect: 'Last answer — Incorrect',
+    missed: 'Missed',
+    playAgain: 'Play again',
+    changeSubject: 'Change subject',
+    newRecord: 'New record',
+    footer: 'Lexicon · Learn one word at a time',
+    streak: (n) => ({3:'🔥 3 in a row!',4:'🔥 4 streak!',5:'⚡ 5 streak — bonus!',6:'⚡ 6 streak!',7:'💎 7 streak — unstoppable!'}[n] || `💎 ${n} streak!`),
+    bestScore: 'Best',
+    totalPlayed: 'Rounds',
+    totalWords: 'Mastered',
+    highCat: 'High',
+    searchPlaceholder: 'Search subjects, audiences, or themes',
+    searchAria: 'Search vocabulary subjects',
+    libraryNote: (builtIn, custom) => `${builtIn} built-in subjects${custom ? ` · ${custom} custom pack${custom > 1 ? 's' : ''} on this device` : ''}` ,
+    noResults: 'No subject matches your search yet. Try a broader keyword like business, travel, health, or daily life.',
+    importPack: 'Import selected',
+    chooseFile: 'Choose file',
+    starterPack: 'Load starter pack',
+    fileReady: (name) => `Selected: ${name}`,
+    fileNone: 'No file selected yet.',
+    importSuccess: (n) => `${n} custom subject${n > 1 ? 's' : ''} added.`,
+    importError: 'This file could not be imported. Use a JSON file with categories and words.',
+    importPrompt: 'Choose a JSON pack to import.',
+    importReady: 'File selected. Click “Import selected”.',
+    starterReady: 'Starter pack loaded.',
+    listen: 'Listen',
+    listenAria: (word) => `Listen to the pronunciation of ${word}`,
+    listenReady: 'Audio available · press S to listen',
+    listenUnavailable: 'Audio is not available in this browser',
+    accuracyLabel: 'accuracy',
+    streakLabel: 'Streak',
+    xpLabel: 'XP today',
+    levelLabel: 'Level',
+    goalLabel: 'Daily goal',
+    goalHint: (pct) => pct ? `${pct}% complete` : 'Start a lesson to begin',
+    reviewLabel: 'Review bank',
+    randomMix: 'Random mix',
+    randomReady: 'A fresh mix of words from different subjects.',
+    reviewMistakes: 'Review mistakes',
+    reviewReady: (n) => `${n} saved word${n > 1 ? 's' : ''} ready for practice.`,
+    reviewEmpty: 'No missed words saved yet.',
+    clearReview: 'Clear review',
+    reviewCleared: 'Review list cleared.',
+    prefsTitle: 'Customize your practice',
+    prefsSub: 'Make Lexicon feel more like your own learning path.',
+    profileNameLabel: 'Display name',
+    profilePlaceholder: 'Your name',
+    dailyGoalLabel: 'Daily XP goal',
+    modeLabel: 'Lesson mode',
+    voiceRateLabel: 'Voice speed',
+    voiceRateNote: 'Adjust text-to-speech for diverse readers and learners.',
+    modeClassic: 'Classic',
+    modeChallenge: 'Challenge',
+    modeClassicHelp: '10 rounds · 2 hints · balanced pace',
+    modeChallengeHelp: '12 rounds · 1 hint · tougher run',
+    dashboardWelcome: (name) => name ? `Welcome back, ${name}` : 'Welcome back',
+    dailyGoalComplete: 'Daily goal reached — nice work.',
+    prefsSaved: 'Preferences saved',
+  },
+  fr: {
+    heroTitle: 'Enrichissez votre<br><em>vocabulaire</em>',
+    heroSub: 'Choisissez un thème et mettez vos connaissances à l\'épreuve — une définition à la fois.',
+    sectionLabel: 'Choisir un thème',
+    wordsLabel: 'mots',
+    scoreLabel: 'Score',
+    round: 'Manche',
+    easy: 'Facile', medium: 'Moyen', hard: 'Difficile',
+    continue: 'Continuer →',
+    hint: 'Indice',
+    kbHint: 'Appuyez sur <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> pour choisir · <kbd>H</kbd> indice · <kbd>S</kbd> écouter · <kbd>Entrée</kbd> pour continuer',
+    wellDone: 'Bien joué',
+    gameOver: 'Partie terminée',
+    resultWin: (cat, lives) => `Vous avez terminé ${cat} avec ${lives} ${lives === 1 ? 'vie restante' : 'vies restantes'}.`,
+    resultLoss: (cat, round) => `Vous avez atteint la manche ${round} en ${cat}.`,
+    score: 'Score', correct: 'Correct', strikes: 'Erreurs',
+    lastCorrect: 'Dernière réponse — Correcte',
+    lastIncorrect: 'Dernière réponse — Incorrecte',
+    missed: 'Manqué',
+    playAgain: 'Rejouer',
+    changeSubject: 'Changer de thème',
+    newRecord: 'Nouveau record',
+    footer: 'Lexicon · Apprenez un mot à la fois',
+    streak: (n) => ({3:'🔥 3 d\'affilée !',4:'🔥 Série de 4 !',5:'⚡ Série de 5 — bonus !',6:'⚡ Série de 6 !',7:'💎 Série de 7 — inarrêtable !'}[n] || `💎 Série de ${n} !`),
+    bestScore: 'Record',
+    totalPlayed: 'Manches',
+    totalWords: 'Maîtrisés',
+    highCat: 'Record',
+    searchPlaceholder: 'Rechercher des thèmes, publics ou sujets',
+    searchAria: 'Rechercher des thèmes de vocabulaire',
+    libraryNote: (builtIn, custom) => `${builtIn} thèmes intégrés${custom ? ` · ${custom} pack${custom > 1 ? 's' : ''} personnalisé${custom > 1 ? 's' : ''} sur cet appareil` : ''}` ,
+    noResults: 'Aucun thème ne correspond à votre recherche. Essayez un mot-clé plus large comme affaires, voyage, santé ou quotidien.',
+    importPack: 'Importer la sélection',
+    chooseFile: 'Choisir un fichier',
+    starterPack: 'Charger le pack de départ',
+    fileReady: (name) => `Fichier sélectionné : ${name}`,
+    fileNone: 'Aucun fichier sélectionné pour le moment.',
+    importSuccess: (n) => `${n} thème${n > 1 ? 's' : ''} personnalisé${n > 1 ? 's' : ''} ajouté${n > 1 ? 's' : ''}.`,
+    importError: 'Ce fichier n\'a pas pu être importé. Utilisez un fichier JSON contenant des thèmes et des mots.',
+    importPrompt: 'Choisissez un fichier JSON à importer.',
+    importReady: 'Fichier prêt. Cliquez sur « Importer la sélection ».',
+    starterReady: 'Pack de départ chargé.',
+    listen: 'Écouter',
+    listenAria: (word) => `Écouter la prononciation de ${word}`,
+    listenReady: 'Audio disponible · appuyez sur S pour écouter',
+    listenUnavailable: 'L\'audio n\'est pas disponible dans ce navigateur',
+    accuracyLabel: 'de précision',
+    streakLabel: 'Série',
+    xpLabel: 'XP du jour',
+    levelLabel: 'Niveau',
+    goalLabel: 'Objectif du jour',
+    goalHint: (pct) => pct ? `${pct}% atteint` : 'Lancez une partie pour commencer',
+    reviewLabel: 'Révision',
+    randomMix: 'Mix aléatoire',
+    randomReady: 'Un mélange frais de mots de plusieurs thèmes.',
+    reviewMistakes: 'Réviser les erreurs',
+    reviewReady: (n) => `${n} mot${n > 1 ? 's' : ''} enregistré${n > 1 ? 's' : ''} prêt${n > 1 ? 's' : ''} à réviser.`,
+    reviewEmpty: 'Aucun mot manqué enregistré pour l’instant.',
+    clearReview: 'Effacer la révision',
+    reviewCleared: 'Liste de révision effacée.',
+    prefsTitle: 'Personnalisez votre pratique',
+    prefsSub: 'Adaptez Lexicon à votre manière d’apprendre.',
+    profileNameLabel: 'Nom affiché',
+    profilePlaceholder: 'Votre nom',
+    dailyGoalLabel: 'Objectif XP du jour',
+    modeLabel: 'Mode de leçon',
+    voiceRateLabel: 'Vitesse de lecture',
+    voiceRateNote: 'Ajustez la lecture audio pour des publics et lecteurs variés.',
+    modeClassic: 'Classique',
+    modeChallenge: 'Challenge',
+    modeClassicHelp: '10 manches · 2 indices · rythme équilibré',
+    modeChallengeHelp: '12 manches · 1 indice · session plus exigeante',
+    dashboardWelcome: (name) => name ? `Bon retour, ${name}` : 'Bon retour',
+    dailyGoalComplete: 'Objectif du jour atteint — bravo.',
+    prefsSaved: 'Préférences enregistrées',
+  }
+};
+
+// ============================================================
+// WORD DATABASE — English
+// ============================================================
+const CATEGORIES_EN = [
+  {
+    id: 'math', name: "Mathematics", icon: "∑", color: "#EBF1FD",
+    words: [
+      { word: "Integer", pos: "noun", definition: "A whole number that can be positive, negative, or zero, without any fractional part.", usage: "\"The set of integers includes −3, 0, and 7.\"", difficulty: 1 },
+      { word: "Median", pos: "noun", definition: "The middle value in an ordered set of numbers, separating the higher half from the lower half.", usage: "\"The median of 2, 5, and 8 is 5.\"", difficulty: 1 },
+      { word: "Quotient", pos: "noun", definition: "The result obtained by dividing one quantity by another.", usage: "\"The quotient of 20 divided by 4 is 5.\"", difficulty: 1 },
+      { word: "Variable", pos: "noun", definition: "A symbol, often a letter, used to represent an unknown or changeable quantity in an expression.", usage: "\"In the equation y = 2x + 1, both x and y are variables.\"", difficulty: 1 },
+      { word: "Exponent", pos: "noun", definition: "A number indicating how many times a base is multiplied by itself.", usage: "\"In 5³, the exponent 3 means 5 × 5 × 5.\"", difficulty: 1 },
+      { word: "Asymptote", pos: "noun", definition: "A line that a curve approaches but never actually reaches or crosses at infinity.", usage: "\"The graph of y = 1/x has the x-axis as a horizontal asymptote.\"", difficulty: 2 },
+      { word: "Polynomial", pos: "noun", definition: "An expression consisting of variables raised to non-negative integer powers, combined with coefficients and addition.", usage: "\"3x² + 2x − 7 is a second-degree polynomial.\"", difficulty: 2 },
+      { word: "Derivative", pos: "noun", definition: "A measure of how a function's output changes as its input changes, representing the instantaneous rate of change.", usage: "\"The derivative of x² is 2x.\"", difficulty: 2 },
+      { word: "Permutation", pos: "noun", definition: "An arrangement of objects in a specific order where the sequence matters.", usage: "\"There are six permutations of the letters A, B, and C.\"", difficulty: 2 },
+      { word: "Hypotenuse", pos: "noun", definition: "The longest side of a right triangle, opposite the right angle.", usage: "\"By the Pythagorean theorem, the hypotenuse equals √(a² + b²).\"", difficulty: 2 },
+      { word: "Eigenvalue", pos: "noun", definition: "A scalar associated with a linear transformation that, when multiplied by a vector, yields the same result as the transformation.", usage: "\"Finding eigenvalues is essential for understanding the behavior of dynamic systems.\"", difficulty: 3 },
+      { word: "Isomorphism", pos: "noun", definition: "A mapping between two structures that preserves the operations and relations of those structures.", usage: "\"The two groups are related by an isomorphism, proving they are structurally identical.\"", difficulty: 3 },
+      { word: "Stochastic", pos: "adjective", definition: "Involving or characterized by random probability or chance rather than deterministic outcomes.", usage: "\"Stock price models often use stochastic processes to account for market volatility.\"", difficulty: 3 },
+      { word: "Topology", pos: "noun", definition: "The branch of mathematics studying properties of shapes that remain unchanged under continuous deformations.", usage: "\"In topology, a coffee mug and a doughnut are considered equivalent.\"", difficulty: 3 },
+      { word: "Conjecture", pos: "noun", definition: "A mathematical statement believed to be true based on evidence but not yet formally proven.", usage: "\"Goldbach's conjecture remains one of the oldest unsolved problems in number theory.\"", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'geo', name: "Geography", icon: "◎", color: "#E8F5EE",
+    words: [
+      { word: "Peninsula", pos: "noun", definition: "A piece of land almost surrounded by water but connected to the mainland on one side.", usage: "\"Florida is one of the most recognizable peninsulas in the world.\"", difficulty: 1 },
+      { word: "Archipelago", pos: "noun", definition: "A group or chain of islands clustered together in a body of water.", usage: "\"Indonesia is the world's largest archipelago, comprising over 17,000 islands.\"", difficulty: 1 },
+      { word: "Latitude", pos: "noun", definition: "The angular distance north or south of the Earth's equator, measured in degrees.", usage: "\"Cities near the equator have a latitude close to 0°.\"", difficulty: 1 },
+      { word: "Plateau", pos: "noun", definition: "A flat, elevated landform that rises sharply above the surrounding area on at least one side.", usage: "\"The Tibetan Plateau is often called the Roof of the World.\"", difficulty: 1 },
+      { word: "Tributary", pos: "noun", definition: "A river or stream that flows into a larger river rather than directly into the sea.", usage: "\"The Missouri River is the longest tributary of the Mississippi.\"", difficulty: 1 },
+      { word: "Tundra", pos: "noun", definition: "A vast, treeless biome in arctic regions where the subsoil is permanently frozen.", usage: "\"The Arctic tundra supports hardy vegetation like mosses and lichens.\"", difficulty: 2 },
+      { word: "Meridian", pos: "noun", definition: "An imaginary line running from the North Pole to the South Pole, used to measure longitude.", usage: "\"The Prime Meridian at 0° longitude passes through Greenwich, England.\"", difficulty: 2 },
+      { word: "Isthmus", pos: "noun", definition: "A narrow strip of land connecting two larger landmasses, bordered on both sides by water.", usage: "\"The Isthmus of Panama connects North and South America.\"", difficulty: 2 },
+      { word: "Estuary", pos: "noun", definition: "A partially enclosed coastal body of water where freshwater rivers meet ocean tides.", usage: "\"Estuaries are among the most biologically productive ecosystems on Earth.\"", difficulty: 2 },
+      { word: "Atoll", pos: "noun", definition: "A ring-shaped coral reef or series of islets encircling a central lagoon.", usage: "\"Many Pacific atolls barely rise a few meters above sea level.\"", difficulty: 2 },
+      { word: "Fjord", pos: "noun", definition: "A long, narrow inlet carved by glacial activity, bordered by steep cliffs.", usage: "\"Norway's western coast is famous for its dramatic fjords.\"", difficulty: 3 },
+      { word: "Pangaea", pos: "noun", definition: "The supercontinent that existed roughly 335–175 million years ago, comprising all present-day continents.", usage: "\"The breakup of Pangaea eventually formed the Atlantic Ocean.\"", difficulty: 3 },
+      { word: "Orography", pos: "noun", definition: "The study of mountains and their formation, including the effect of elevated terrain on weather.", usage: "\"Orography explains why the western slopes of the Andes receive more rainfall.\"", difficulty: 3 },
+      { word: "Bathymetry", pos: "noun", definition: "The measurement and mapping of depths of the ocean floor and other underwater topography.", usage: "\"Bathymetry data revealed a previously unknown underwater mountain range.\"", difficulty: 3 },
+      { word: "Permafrost", pos: "noun", definition: "Ground that remains at or below 0 °C for at least two consecutive years, common in polar regions.", usage: "\"Thawing permafrost releases methane, accelerating climate change.\"", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'sci', name: "Science", icon: "⬡", color: "#F3EEFB",
+    words: [
+      { word: "Hypothesis", pos: "noun", definition: "A proposed explanation for a phenomenon, made as a starting point for investigation.", usage: "\"The scientist formed a hypothesis before designing the experiment.\"", difficulty: 1 },
+      { word: "Molecule", pos: "noun", definition: "A group of atoms bonded together, representing the smallest unit of a chemical compound.", usage: "\"A water molecule consists of two hydrogen atoms and one oxygen atom.\"", difficulty: 1 },
+      { word: "Gravity", pos: "noun", definition: "The natural force of attraction between objects with mass, pulling them toward one another.", usage: "\"Gravity keeps the planets in orbit around the Sun.\"", difficulty: 1 },
+      { word: "Photosynthesis", pos: "noun", definition: "The process by which green plants convert sunlight, water, and carbon dioxide into glucose and oxygen.", usage: "\"Without photosynthesis, life on Earth as we know it would not exist.\"", difficulty: 1 },
+      { word: "Ecosystem", pos: "noun", definition: "A community of living organisms interacting with their physical environment as a functional unit.", usage: "\"A coral reef is one of the most diverse ecosystems on the planet.\"", difficulty: 1 },
+      { word: "Entropy", pos: "noun", definition: "A thermodynamic quantity measuring the degree of disorder or randomness in a system.", usage: "\"The second law of thermodynamics states that entropy always tends to increase.\"", difficulty: 2 },
+      { word: "Catalyst", pos: "noun", definition: "A substance that increases the rate of a chemical reaction without being consumed in the process.", usage: "\"Enzymes act as biological catalysts in the human body.\"", difficulty: 2 },
+      { word: "Isotope", pos: "noun", definition: "A variant of a chemical element that has the same number of protons but a different number of neutrons.", usage: "\"Carbon-14 is a radioactive isotope used in archaeological dating.\"", difficulty: 2 },
+      { word: "Mitosis", pos: "noun", definition: "A type of cell division that results in two genetically identical daughter cells from a single parent cell.", usage: "\"Mitosis is responsible for growth and tissue repair in multicellular organisms.\"", difficulty: 2 },
+      { word: "Covalent", pos: "adjective", definition: "Relating to a chemical bond formed by the sharing of electron pairs between atoms.", usage: "\"Water is formed through covalent bonds between hydrogen and oxygen.\"", difficulty: 2 },
+      { word: "Quasar", pos: "noun", definition: "An extremely luminous active galactic nucleus powered by a supermassive black hole accreting matter.", usage: "\"Quasars are among the most distant and energetic objects observable in the universe.\"", difficulty: 3 },
+      { word: "Apoptosis", pos: "noun", definition: "The process of programmed cell death that occurs in multicellular organisms as part of normal development.", usage: "\"Disruptions in apoptosis can lead to uncontrolled cell growth and cancer.\"", difficulty: 3 },
+      { word: "Anisotropy", pos: "noun", definition: "The quality of exhibiting different properties or behaviors when measured along different directions.", usage: "\"The anisotropy of the crystal means it refracts light differently depending on orientation.\"", difficulty: 3 },
+      { word: "Chirality", pos: "noun", definition: "A geometric property where an object is not superimposable on its mirror image, like left and right hands.", usage: "\"Chirality in drug molecules can determine whether a compound is therapeutic or toxic.\"", difficulty: 3 },
+      { word: "Bioluminescence", pos: "noun", definition: "The production and emission of light by living organisms through a chemical reaction.", usage: "\"Deep-sea creatures use bioluminescence to attract prey in total darkness.\"", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'art', name: "Art & Design", icon: "◐", color: "#FFF3E8",
+    words: [
+      { word: "Palette", pos: "noun", definition: "The range of colors used by an artist in a particular work or style of painting.", usage: "\"Picasso's Blue Period is defined by its somber palette of cool tones.\"", difficulty: 1 },
+      { word: "Symmetry", pos: "noun", definition: "A balanced arrangement of parts on opposite sides of a dividing line or central point.", usage: "\"The façade of the Parthenon demonstrates near-perfect bilateral symmetry.\"", difficulty: 1 },
+      { word: "Mosaic", pos: "noun", definition: "A picture or pattern produced by arranging small colored pieces of stone, tile, or glass.", usage: "\"Byzantine churches are famous for their elaborate golden mosaics.\"", difficulty: 1 },
+      { word: "Perspective", pos: "noun", definition: "A technique for representing three-dimensional depth on a flat surface using converging lines.", usage: "\"Renaissance artists mastered linear perspective to create lifelike scenes.\"", difficulty: 1 },
+      { word: "Fresco", pos: "noun", definition: "A technique of mural painting on freshly laid wet plaster so that colors become part of the wall.", usage: "\"Michelangelo's Sistine Chapel ceiling is one of the most famous frescoes ever created.\"", difficulty: 2 },
+      { word: "Chiaroscuro", pos: "noun", definition: "The use of strong contrasts between light and dark to give the illusion of volume and depth.", usage: "\"Caravaggio mastered chiaroscuro to create dramatic, almost theatrical compositions.\"", difficulty: 2 },
+      { word: "Bauhaus", pos: "noun", definition: "A highly influential German art school and movement that unified crafts, fine arts, and functional design.", usage: "\"The Bauhaus movement shaped the foundations of modern architecture and graphic design.\"", difficulty: 2 },
+      { word: "Patina", pos: "noun", definition: "A thin layer of color or texture that develops on a surface through age, oxidation, or deliberate treatment.", usage: "\"The green patina on the Statue of Liberty is a result of copper oxidation.\"", difficulty: 2 },
+      { word: "Provenance", pos: "noun", definition: "The documented history of ownership and custody of an artwork from its creation to the present.", usage: "\"The painting's provenance was traced back to a 17th-century Florentine collection.\"", difficulty: 2 },
+      { word: "Gouache", pos: "noun", definition: "An opaque watercolor paint that produces a matte, velvety finish when dry.", usage: "\"Illustrators often prefer gouache for its quick-drying, even coverage.\"", difficulty: 2 },
+      { word: "Sfumato", pos: "noun", definition: "A painting technique of softly blending colors and tones so there are no harsh outlines or edges.", usage: "\"Leonardo da Vinci's Mona Lisa is celebrated for its masterful use of sfumato.\"", difficulty: 3 },
+      { word: "Trompe-l'œil", pos: "noun", definition: "A visual illusion in art that makes a flat surface appear to be three-dimensional reality.", usage: "\"The ceiling mural was a stunning trompe-l'œil that seemed to open to the sky.\"", difficulty: 3 },
+      { word: "Impasto", pos: "noun", definition: "A technique where paint is applied in thick, textured strokes that stand out from the surface.", usage: "\"Van Gogh's impasto gives Starry Night its swirling, almost sculptural energy.\"", difficulty: 3 },
+      { word: "Grisaille", pos: "noun", definition: "A method of painting entirely in shades of gray to mimic the effect of sculpture or relief.", usage: "\"The outer panels of the Ghent Altarpiece are rendered in grisaille.\"", difficulty: 3 },
+      { word: "Pentimento", pos: "noun", definition: "A visible trace of an earlier painting beneath a layer of paint on a canvas, revealing the artist's revisions.", usage: "\"X-ray analysis revealed a pentimento showing the figure was originally facing left.\"", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'biz', name: "Business", icon: "▲", color: "#E8F5EE",
+    words: [
+      { word: "Revenue", pos: "noun", definition: "The total income generated by a business from its normal operations before any expenses are deducted.", usage: "\"The company's annual revenue surpassed $10 billion for the first time.\"", difficulty: 1 },
+      { word: "Equity", pos: "noun", definition: "The value of ownership interest in a company, calculated as total assets minus total liabilities.", usage: "\"She received equity in the startup as part of her compensation package.\"", difficulty: 1 },
+      { word: "Margin", pos: "noun", definition: "The difference between the cost of a product and its selling price, expressed as a percentage.", usage: "\"Luxury brands typically operate with higher profit margins.\"", difficulty: 1 },
+      { word: "Dividend", pos: "noun", definition: "A portion of a company's earnings distributed to shareholders as a return on their investment.", usage: "\"The board announced a quarterly dividend of $1.50 per share.\"", difficulty: 1 },
+      { word: "Liability", pos: "noun", definition: "A financial obligation or debt that a company owes to outside parties.", usage: "\"The firm's total liabilities exceeded its assets, signaling potential insolvency.\"", difficulty: 1 },
+      { word: "Amortization", pos: "noun", definition: "The gradual reduction of a debt or the allocation of an intangible asset's cost over its useful life.", usage: "\"The software development costs were spread over five years through amortization.\"", difficulty: 2 },
+      { word: "Arbitrage", pos: "noun", definition: "The practice of exploiting price differences in different markets by simultaneously buying and selling an asset.", usage: "\"Currency arbitrage traders profit from discrepancies in exchange rates across markets.\"", difficulty: 2 },
+      { word: "Fiduciary", pos: "adjective", definition: "Relating to a person or entity entrusted with the obligation to act in another's best financial interest.", usage: "\"Financial advisors have a fiduciary duty to prioritize their clients' well-being.\"", difficulty: 2 },
+      { word: "Liquidity", pos: "noun", definition: "The ease with which an asset or security can be converted into cash without significantly affecting its price.", usage: "\"Real estate has lower liquidity than publicly traded stocks.\"", difficulty: 2 },
+      { word: "Leverage", pos: "noun", definition: "The use of borrowed capital to increase the potential return on an investment.", usage: "\"The private equity firm used significant leverage to finance the acquisition.\"", difficulty: 2 },
+      { word: "Synergy", pos: "noun", definition: "The additional value created when two companies combine, exceeding what they could achieve independently.", usage: "\"The merger was justified by projected synergies in supply chain and distribution.\"", difficulty: 3 },
+      { word: "Securitization", pos: "noun", definition: "The process of pooling various financial assets and selling them as tradable securities to investors.", usage: "\"The securitization of mortgages was a key factor in the 2008 financial crisis.\"", difficulty: 3 },
+      { word: "Oligopoly", pos: "noun", definition: "A market structure dominated by a small number of firms whose decisions significantly influence one another.", usage: "\"The airline industry is often cited as a classic example of an oligopoly.\"", difficulty: 3 },
+      { word: "Hedging", pos: "noun", definition: "An investment strategy designed to reduce the risk of adverse price movements in an asset.", usage: "\"The airline used fuel hedging contracts to protect against rising oil prices.\"", difficulty: 3 },
+      { word: "Depreciation", pos: "noun", definition: "The systematic allocation of a tangible asset's cost over its expected useful life.", usage: "\"The company recorded annual depreciation on its fleet of delivery vehicles.\"", difficulty: 2 },
+    ]
+  },
+  {
+    id: 'law', name: "Law", icon: "§", color: "#F5F0E6",
+    words: [
+      { word: "Plaintiff", pos: "noun", definition: "The party who initiates a lawsuit in a court of law, seeking a legal remedy.", usage: "\"The plaintiff filed a complaint alleging breach of contract.\"", difficulty: 1 },
+      { word: "Verdict", pos: "noun", definition: "The formal decision or finding made by a jury or judge at the conclusion of a trial.", usage: "\"The jury returned a unanimous verdict of not guilty.\"", difficulty: 1 },
+      { word: "Statute", pos: "noun", definition: "A written law formally enacted by a legislative body at the federal or state level.", usage: "\"The statute of limitations for filing the claim had already expired.\"", difficulty: 1 },
+      { word: "Affidavit", pos: "noun", definition: "A written statement of facts confirmed by oath or affirmation, used as evidence in court.", usage: "\"The witness submitted a sworn affidavit describing the events of that night.\"", difficulty: 1 },
+      { word: "Litigation", pos: "noun", definition: "The process of taking legal action or resolving disputes through the court system.", usage: "\"The company spent years in costly litigation before reaching a settlement.\"", difficulty: 1 },
+      { word: "Jurisprudence", pos: "noun", definition: "The theory, philosophy, and study of law, including its principles and interpretations.", usage: "\"Her expertise in constitutional jurisprudence made her a leading candidate for the bench.\"", difficulty: 2 },
+      { word: "Habeas Corpus", pos: "noun", definition: "A legal order requiring a person under arrest to be brought before a judge to determine if detention is lawful.", usage: "\"The defense filed a writ of habeas corpus to challenge the unlawful imprisonment.\"", difficulty: 2 },
+      { word: "Precedent", pos: "noun", definition: "A prior court decision that serves as an authoritative rule or pattern in future similar cases.", usage: "\"The Supreme Court ruling set a precedent that reshaped privacy law.\"", difficulty: 2 },
+      { word: "Indictment", pos: "noun", definition: "A formal accusation issued by a grand jury, charging a person with a serious crime.", usage: "\"The grand jury returned an indictment on three counts of fraud.\"", difficulty: 2 },
+      { word: "Tort", pos: "noun", definition: "A wrongful act, other than a breach of contract, that causes harm and leads to civil legal liability.", usage: "\"Negligence is the most commonly litigated tort in personal injury law.\"", difficulty: 2 },
+      { word: "Subpoena", pos: "noun", definition: "A legal document ordering a person to attend court as a witness or to produce documents.", usage: "\"The attorney issued a subpoena to obtain the financial records.\"", difficulty: 2 },
+      { word: "Stare Decisis", pos: "noun", definition: "The legal principle that courts should follow the rulings of previous decisions when addressing similar issues.", usage: "\"The doctrine of stare decisis ensures consistency and predictability in the law.\"", difficulty: 3 },
+      { word: "Amicus Curiae", pos: "noun", definition: "A person or organization not party to a case who offers information or expertise to assist the court.", usage: "\"Several civil rights groups filed amicus curiae briefs in the landmark case.\"", difficulty: 3 },
+      { word: "Estoppel", pos: "noun", definition: "A legal principle that prevents a party from asserting a claim that contradicts their previous conduct or statements.", usage: "\"The court applied promissory estoppel because the plaintiff had relied on the defendant's promise.\"", difficulty: 3 },
+      { word: "Malfeasance", pos: "noun", definition: "Intentional wrongdoing or misconduct, especially by a public official in the exercise of their duties.", usage: "\"The mayor was removed from office following charges of malfeasance.\"", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'eng', name: "English", icon: "¶", color: "#F0EBF8",
+    words: [
+      { word: "Metaphor", pos: "noun", definition: "A figure of speech that directly compares two unlike things by stating one is the other.", usage: "\"'Time is a thief' is a metaphor suggesting time steals moments from us.\"", difficulty: 1 },
+      { word: "Syntax", pos: "noun", definition: "The set of rules governing the arrangement of words and phrases to form proper sentences.", usage: "\"Changing the syntax of the sentence altered its entire meaning.\"", difficulty: 1 },
+      { word: "Allegory", pos: "noun", definition: "A narrative in which characters and events symbolize deeper moral, spiritual, or political meanings.", usage: "\"George Orwell's Animal Farm is an allegory for the Russian Revolution.\"", difficulty: 1 },
+      { word: "Irony", pos: "noun", definition: "A literary device where the intended meaning is opposite to the literal meaning of the words used.", usage: "\"It was irony that the fire station burned down.\"", difficulty: 1 },
+      { word: "Prose", pos: "noun", definition: "Written or spoken language in its ordinary form, without the metrical structure of verse or poetry.", usage: "\"The novel is written in elegant prose that flows effortlessly.\"", difficulty: 1 },
+      { word: "Euphemism", pos: "noun", definition: "A mild or indirect expression substituted for one considered too harsh, blunt, or offensive.", usage: "\"'Passed away' is a common euphemism for 'died.'\"", difficulty: 2 },
+      { word: "Oxymoron", pos: "noun", definition: "A figure of speech combining two contradictory terms for rhetorical or poetic effect.", usage: "\"'Bittersweet' and 'deafening silence' are classic oxymorons.\"", difficulty: 2 },
+      { word: "Juxtaposition", pos: "noun", definition: "The placement of two or more elements side by side to highlight their contrasts or similarities.", usage: "\"The author's juxtaposition of wealth and poverty underscored the novel's social critique.\"", difficulty: 2 },
+      { word: "Antithesis", pos: "noun", definition: "A rhetorical device placing sharply contrasting ideas in balanced opposition within a sentence.", usage: "\"'It was the best of times, it was the worst of times' is a famous antithesis.\"", difficulty: 2 },
+      { word: "Synecdoche", pos: "noun", definition: "A figure of speech in which a part is used to represent the whole or vice versa.", usage: "\"Saying 'nice wheels' when referring to a car is an example of synecdoche.\"", difficulty: 2 },
+      { word: "Litotes", pos: "noun", definition: "A form of understatement that uses negation to express the contrary of what is meant.", usage: "\"Saying 'not bad' when you mean 'excellent' is an example of litotes.\"", difficulty: 3 },
+      { word: "Anaphora", pos: "noun", definition: "The deliberate repetition of a word or phrase at the beginning of successive clauses for emphasis.", usage: "\"Martin Luther King Jr.'s 'I have a dream' speech is built on powerful anaphora.\"", difficulty: 3 },
+      { word: "Epistrophe", pos: "noun", definition: "The repetition of a word or phrase at the end of successive clauses or sentences for rhetorical effect.", usage: "\"Lincoln's 'of the people, by the people, for the people' employs epistrophe.\"", difficulty: 3 },
+      { word: "Tmesis", pos: "noun", definition: "The separation of a compound word by insertion of another word or words between its parts.", usage: "\"'Abso-blooming-lutely' is a playful example of tmesis.\"", difficulty: 3 },
+      { word: "Zeugma", pos: "noun", definition: "A figure of speech where a single word governs or modifies two or more words in different senses.", usage: "\"'She lowered her standards and her neckline' uses zeugma for comic effect.\"", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'ent', name: "Entertainment", icon: "♦", color: "#FFECEF",
+    words: [
+      { word: "Montage", pos: "noun", definition: "A filmmaking technique of assembling separate pieces of footage into a rapid, unified sequence.", usage: "\"The training montage in Rocky became one of cinema's most iconic sequences.\"", difficulty: 1 },
+      { word: "Genre", pos: "noun", definition: "A category of artistic composition characterized by shared themes, styles, or conventions.", usage: "\"Horror and comedy are distinct genres, though some films blend both.\"", difficulty: 1 },
+      { word: "Protagonist", pos: "noun", definition: "The leading character in a story, around whom the central conflict and narrative revolve.", usage: "\"The protagonist's moral dilemma drives the entire plot of the film.\"", difficulty: 1 },
+      { word: "Ensemble", pos: "noun", definition: "A group of performers who work together as a unified cast rather than featuring a single lead.", usage: "\"The film succeeds due to the strength of its ensemble cast.\"", difficulty: 1 },
+      { word: "Cameo", pos: "noun", definition: "A brief appearance by a well-known person in a film, show, or performance.", usage: "\"Stan Lee was famous for making cameo appearances in Marvel films.\"", difficulty: 1 },
+      { word: "Auteur", pos: "noun", definition: "A filmmaker whose personal creative vision dominates the style and themes of their work.", usage: "\"Kubrick is considered an auteur for his obsessive control over every detail.\"", difficulty: 2 },
+      { word: "Foley", pos: "noun", definition: "The reproduction of everyday sound effects added in post-production to enhance audio realism in film.", usage: "\"A Foley artist created the footstep sounds using gravel in a studio tray.\"", difficulty: 2 },
+      { word: "MacGuffin", pos: "noun", definition: "A plot device in the form of an object or goal that drives the story but holds little importance itself.", usage: "\"The briefcase in Pulp Fiction is a classic MacGuffin — its contents never matter.\"", difficulty: 2 },
+      { word: "Denouement", pos: "noun", definition: "The final resolution of a story's plot, where remaining complications are explained and resolved.", usage: "\"The denouement revealed the detective had been the accomplice all along.\"", difficulty: 2 },
+      { word: "Soliloquy", pos: "noun", definition: "A speech in a dramatic work in which a character speaks their thoughts aloud while alone on stage.", usage: "\"Hamlet's 'To be or not to be' is the most famous soliloquy in English literature.\"", difficulty: 2 },
+      { word: "Diegetic", pos: "adjective", definition: "Relating to sound or music that originates from a source within the fictional world of a film or show.", usage: "\"The radio playing in the character's car was diegetic sound.\"", difficulty: 3 },
+      { word: "Mise-en-scène", pos: "noun", definition: "The arrangement of all visual elements within a film frame, including set design, lighting, and positioning.", usage: "\"Wes Anderson's distinctive mise-en-scène features symmetrical, pastel-colored compositions.\"", difficulty: 3 },
+      { word: "Pastiche", pos: "noun", definition: "A creative work that imitates the style of another artist or period as a respectful tribute.", usage: "\"The film was a loving pastiche of 1950s science fiction B-movies.\"", difficulty: 3 },
+      { word: "Verisimilitude", pos: "noun", definition: "The appearance of being true or real; the quality of seeming believable in a work of fiction.", usage: "\"The period costumes gave the historical drama remarkable verisimilitude.\"", difficulty: 3 },
+      { word: "Leitmotif", pos: "noun", definition: "A recurring musical theme associated with a particular character, place, or idea throughout a work.", usage: "\"John Williams composed a distinct leitmotif for Darth Vader known as the Imperial March.\"", difficulty: 3 },
+    ]
+  },
+];
+
+// ============================================================
+// WORD DATABASE — French (native content, not translations)
+// ============================================================
+const CATEGORIES_FR = [
+  {
+    id: 'math', name: "Mathématiques", icon: "∑", color: "#EBF1FD",
+    words: [
+      { word: "Abscisse", pos: "nom féminin", definition: "La première coordonnée d'un point dans un repère, indiquant sa position sur l'axe horizontal.", usage: "« Le point A a pour abscisse 3 et pour ordonnée 5. »", difficulty: 1 },
+      { word: "Médiane", pos: "nom féminin", definition: "La valeur qui partage une série ordonnée en deux groupes de même effectif.", usage: "« La médiane de 2, 5 et 8 est 5. »", difficulty: 1 },
+      { word: "Dénominateur", pos: "nom masculin", definition: "Le nombre placé sous la barre d'une fraction, indiquant en combien de parts l'unité est divisée.", usage: "« Dans la fraction ¾, le dénominateur est 4. »", difficulty: 1 },
+      { word: "Polygone", pos: "nom masculin", definition: "Une figure plane fermée délimitée par plusieurs segments de droite appelés côtés.", usage: "« Le triangle est le polygone ayant le plus petit nombre de côtés. »", difficulty: 1 },
+      { word: "Facteur", pos: "nom masculin", definition: "Chacun des nombres qui, multipliés entre eux, donnent un produit.", usage: "« Dans 3 × 4 = 12, les facteurs sont 3 et 4. »", difficulty: 1 },
+      { word: "Bissectrice", pos: "nom féminin", definition: "La demi-droite qui partage un angle en deux angles de même mesure.", usage: "« Tout point de la bissectrice est équidistant des deux côtés de l'angle. »", difficulty: 2 },
+      { word: "Asymptote", pos: "nom féminin", definition: "Une droite dont une courbe se rapproche indéfiniment sans jamais l'atteindre.", usage: "« L'hyperbole admet deux asymptotes qui se coupent en son centre. »", difficulty: 2 },
+      { word: "Primitive", pos: "nom féminin", definition: "Une fonction dont la dérivée est égale à une fonction donnée sur un intervalle.", usage: "« La fonction x² est une primitive de 2x. »", difficulty: 2 },
+      { word: "Factorielle", pos: "nom féminin", definition: "Le produit de tous les entiers naturels de 1 jusqu'à un entier donné, noté avec un point d'exclamation.", usage: "« 5! vaut 120, soit 1 × 2 × 3 × 4 × 5. »", difficulty: 2 },
+      { word: "Arithmétique", pos: "nom féminin", definition: "La branche des mathématiques qui étudie les propriétés des nombres entiers.", usage: "« Le théorème fondamental de l'arithmétique énonce l'unicité de la décomposition en facteurs premiers. »", difficulty: 2 },
+      { word: "Bijection", pos: "nom féminin", definition: "Une application à la fois injective et surjective, établissant une correspondance un-à-un entre deux ensembles.", usage: "« Une bijection permet de définir l'application réciproque. »", difficulty: 3 },
+      { word: "Homothétie", pos: "nom féminin", definition: "Une transformation géométrique qui agrandit ou réduit une figure selon un rapport donné, à partir d'un centre fixe.", usage: "« Une homothétie de rapport 2 double toutes les distances au centre. »", difficulty: 3 },
+      { word: "Cardinal", pos: "nom masculin", definition: "Le nombre d'éléments que contient un ensemble fini.", usage: "« Le cardinal de l'ensemble {a, b, c} est 3. »", difficulty: 3 },
+      { word: "Récurrence", pos: "nom féminin", definition: "Un mode de raisonnement permettant de démontrer une propriété pour tous les entiers à partir d'un rang donné.", usage: "« On démontre par récurrence que la somme des n premiers entiers vaut n(n+1)/2. »", difficulty: 3 },
+      { word: "Barycentre", pos: "nom masculin", definition: "Le point d'équilibre d'un système de points affectés de coefficients, généralisation du centre de gravité.", usage: "« Le barycentre d'un triangle est le point de concours des médianes. »", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'geo', name: "Géographie", icon: "◎", color: "#E8F5EE",
+    words: [
+      { word: "Affluent", pos: "nom masculin", definition: "Un cours d'eau qui se jette dans un autre cours d'eau plus important.", usage: "« L'Ain est un affluent du Rhône. »", difficulty: 1 },
+      { word: "Presqu'île", pos: "nom féminin", definition: "Une portion de terre entourée d'eau mais rattachée au continent par une étroite bande.", usage: "« La presqu'île de Quiberon est reliée à la Bretagne par un simple cordon de sable. »", difficulty: 1 },
+      { word: "Relief", pos: "nom masculin", definition: "L'ensemble des inégalités de la surface terrestre : montagnes, plaines, vallées.", usage: "« Le relief des Alpes a été façonné par les glaciers. »", difficulty: 1 },
+      { word: "Littoral", pos: "nom masculin", definition: "La zone de contact entre la terre et la mer, comprenant la côte et ses abords.", usage: "« Le littoral méditerranéen attire des millions de touristes chaque été. »", difficulty: 1 },
+      { word: "Embouchure", pos: "nom féminin", definition: "L'endroit où un fleuve se jette dans la mer ou dans un lac.", usage: "« L'embouchure de la Loire se situe près de Saint-Nazaire. »", difficulty: 1 },
+      { word: "Méandre", pos: "nom masculin", definition: "Une sinuosité décrite par le lit d'un cours d'eau dans une plaine.", usage: "« La Seine forme de nombreux méandres avant de traverser Paris. »", difficulty: 2 },
+      { word: "Bocage", pos: "nom masculin", definition: "Un paysage agricole où les champs sont enclos par des haies et des talus boisés.", usage: "« Le bocage normand est menacé par le remembrement des terres. »", difficulty: 2 },
+      { word: "Estran", pos: "nom masculin", definition: "La partie du littoral alternativement couverte et découverte par le flux et le reflux des marées.", usage: "« À marée basse, l'estran du Mont-Saint-Michel s'étend sur des kilomètres. »", difficulty: 2 },
+      { word: "Adret", pos: "nom masculin", definition: "Le versant d'une montagne exposé au soleil, généralement orienté au sud dans l'hémisphère nord.", usage: "« Les villages alpins sont traditionnellement construits sur l'adret. »", difficulty: 2 },
+      { word: "Garrigue", pos: "nom féminin", definition: "Une formation végétale basse et clairsemée des régions méditerranéennes, sur sol calcaire.", usage: "« Le thym et le romarin parfument la garrigue provençale. »", difficulty: 2 },
+      { word: "Ubac", pos: "nom masculin", definition: "Le versant d'une montagne exposé à l'ombre, orienté au nord dans l'hémisphère nord.", usage: "« La neige persiste plus longtemps sur l'ubac que sur l'adret. »", difficulty: 3 },
+      { word: "Isohyète", pos: "nom féminin", definition: "Une ligne imaginaire joignant les points recevant la même quantité de précipitations.", usage: "« La carte des isohyètes révèle une nette aridité au sud du Sahara. »", difficulty: 3 },
+      { word: "Polder", pos: "nom masculin", definition: "Une étendue de terre gagnée sur la mer par endiguement et assèchement artificiel.", usage: "« Un quart du territoire des Pays-Bas est constitué de polders. »", difficulty: 3 },
+      { word: "Doline", pos: "nom féminin", definition: "Une dépression circulaire formée par dissolution des roches calcaires en surface.", usage: "« Les dolines du Causse criblent le plateau de trous aux parois abruptes. »", difficulty: 3 },
+      { word: "Œkoumène", pos: "nom masculin", definition: "L'ensemble des terres habitées et aménagées de façon permanente par l'être humain.", usage: "« L'œkoumène n'a cessé de s'étendre au cours de l'histoire. »", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'sci', name: "Sciences", icon: "⬡", color: "#F3EEFB",
+    words: [
+      { word: "Cellule", pos: "nom féminin", definition: "L'unité structurale et fonctionnelle de base de tous les êtres vivants.", usage: "« Le corps humain est composé de milliers de milliards de cellules. »", difficulty: 1 },
+      { word: "Atome", pos: "nom masculin", definition: "La plus petite particule d'un élément chimique conservant les propriétés de cet élément.", usage: "« L'atome d'hydrogène est le plus simple, avec un seul proton et un électron. »", difficulty: 1 },
+      { word: "Écosystème", pos: "nom masculin", definition: "Un ensemble formé par une communauté d'êtres vivants en interaction avec leur milieu naturel.", usage: "« La forêt amazonienne abrite l'écosystème terrestre le plus riche de la planète. »", difficulty: 1 },
+      { word: "Énergie", pos: "nom féminin", definition: "La capacité d'un système à produire un travail, du mouvement ou de la chaleur.", usage: "« L'énergie cinétique d'un objet dépend de sa masse et de sa vitesse. »", difficulty: 1 },
+      { word: "Dioxyde", pos: "nom masculin", definition: "Un composé chimique dont la molécule comporte deux atomes d'oxygène liés à un autre élément.", usage: "« Le dioxyde de carbone est le principal gaz à effet de serre. »", difficulty: 1 },
+      { word: "Allèle", pos: "nom masculin", definition: "Chacune des versions possibles d'un même gène, occupant une position identique sur un chromosome.", usage: "« L'allèle des yeux bruns est dominant par rapport à celui des yeux bleus. »", difficulty: 2 },
+      { word: "Inertie", pos: "nom féminin", definition: "La propriété d'un corps à résister à toute modification de son état de repos ou de mouvement.", usage: "« Par inertie, les passagers sont projetés en avant lors d'un freinage brusque. »", difficulty: 2 },
+      { word: "Enzyme", pos: "nom féminin", definition: "Une protéine qui accélère une réaction chimique dans un organisme vivant sans être consommée.", usage: "« L'amylase est l'enzyme de la salive qui commence la digestion de l'amidon. »", difficulty: 2 },
+      { word: "Réfraction", pos: "nom féminin", definition: "Le changement de direction d'une onde lorsqu'elle passe d'un milieu à un autre de densité différente.", usage: "« La réfraction explique pourquoi une paille semble brisée dans un verre d'eau. »", difficulty: 2 },
+      { word: "Symbiose", pos: "nom féminin", definition: "Une association durable et mutuellement bénéfique entre deux organismes d'espèces différentes.", usage: "« Le lichen résulte de la symbiose entre un champignon et une algue. »", difficulty: 2 },
+      { word: "Anthropocène", pos: "nom masculin", definition: "L'époque géologique proposée pour désigner la période où l'activité humaine devient la force dominante sur l'environnement terrestre.", usage: "« Certains géologues situent le début de l'Anthropocène à la révolution industrielle. »", difficulty: 3 },
+      { word: "Épigénétique", pos: "nom féminin", definition: "L'étude des modifications de l'expression des gènes qui ne passent pas par un changement de la séquence ADN.", usage: "« L'épigénétique montre que l'environnement peut influencer le génome sur plusieurs générations. »", difficulty: 3 },
+      { word: "Photon", pos: "nom masculin", definition: "La particule élémentaire associée au rayonnement électromagnétique, porteuse de la lumière.", usage: "« Un photon n'a pas de masse mais transporte de l'énergie. »", difficulty: 3 },
+      { word: "Phagocytose", pos: "nom féminin", definition: "Le processus par lequel une cellule englobe et digère des particules étrangères ou des micro-organismes.", usage: "« Les globules blancs utilisent la phagocytose pour éliminer les bactéries. »", difficulty: 3 },
+      { word: "Entropie", pos: "nom féminin", definition: "Une grandeur thermodynamique mesurant le degré de désordre ou d'imprévisibilité d'un système.", usage: "« Selon le deuxième principe, l'entropie d'un système isolé ne peut qu'augmenter. »", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'art', name: "Art & Design", icon: "◐", color: "#FFF3E8",
+    words: [
+      { word: "Esquisse", pos: "nom féminin", definition: "Un premier tracé rapide servant de base à une œuvre plus achevée.", usage: "« Degas conservait des centaines d'esquisses de danseuses avant de peindre ses toiles. »", difficulty: 1 },
+      { word: "Nuance", pos: "nom féminin", definition: "Une légère différence de ton ou d'intensité entre deux couleurs voisines.", usage: "« Le peintre jouait sur d'infimes nuances de bleu pour rendre la profondeur du ciel. »", difficulty: 1 },
+      { word: "Cadrage", pos: "nom masculin", definition: "La manière dont le sujet est placé et délimité dans le champ de l'image.", usage: "« Un cadrage serré isole le visage et intensifie l'émotion. »", difficulty: 1 },
+      { word: "Estampe", pos: "nom féminin", definition: "Une image imprimée à partir d'une planche gravée ou dessinée, reproductible en plusieurs exemplaires.", usage: "« Les estampes japonaises d'Hokusai ont profondément marqué l'impressionnisme. »", difficulty: 1 },
+      { word: "Aplat", pos: "nom masculin", definition: "Une surface de couleur uniforme, appliquée sans dégradé ni modelé.", usage: "« Les aplats colorés de Matisse simplifient la forme jusqu'à l'abstraction. »", difficulty: 2 },
+      { word: "Clair-obscur", pos: "nom masculin", definition: "Un procédé opposant fortement lumières et ombres pour créer du volume et du drame.", usage: "« Le clair-obscur de Georges de La Tour plonge ses personnages dans un halo de bougie. »", difficulty: 2 },
+      { word: "Glacis", pos: "nom masculin", definition: "Une fine couche de peinture transparente posée sur une couche sèche pour en modifier la couleur.", usage: "« Les peintres flamands superposaient de nombreux glacis pour obtenir des chairs lumineuses. »", difficulty: 2 },
+      { word: "Fusain", pos: "nom masculin", definition: "Un bâton de bois carbonisé utilisé pour le dessin, donnant un trait noir velouté facile à estomper.", usage: "« Le fusain permet des dégradés subtils mais exige d'être fixé pour ne pas s'effacer. »", difficulty: 2 },
+      { word: "Eau-forte", pos: "nom féminin", definition: "Une technique de gravure où un acide mord les zones découvertes d'une plaque métallique vernie.", usage: "« Rembrandt porta l'eau-forte à un niveau de raffinement inégalé. »", difficulty: 2 },
+      { word: "Drapé", pos: "nom masculin", definition: "La représentation des plis et du tombé d'une étoffe sur un corps ou un objet.", usage: "« Le drapé des robes de Vermeer semble capter la lumière du jour. »", difficulty: 2 },
+      { word: "Sanguine", pos: "nom féminin", definition: "Un crayon d'oxyde de fer donnant un trait rouge-brun caractéristique, prisé pour les études de nu.", usage: "« Léonard de Vinci réalisa nombre de ses études anatomiques à la sanguine. »", difficulty: 3 },
+      { word: "Repentir", pos: "nom masculin", definition: "Une modification apportée par l'artiste en cours d'exécution, visible sous les couches ultérieures.", usage: "« La radiographie a révélé un repentir : le bras était d'abord levé. »", difficulty: 3 },
+      { word: "Empâtement", pos: "nom masculin", definition: "L'application de la peinture en couche épaisse, laissant visible le relief de la matière.", usage: "« Les empâtements de Van Gogh donnent à ses ciels une énergie presque sculpturale. »", difficulty: 3 },
+      { word: "Camaïeu", pos: "nom masculin", definition: "Une composition utilisant les différentes valeurs d'une seule et même couleur.", usage: "« Le décorateur a choisi un camaïeu de gris pour adoucir la pièce. »", difficulty: 3 },
+      { word: "Anamorphose", pos: "nom féminin", definition: "Une image déformée qui ne retrouve ses proportions correctes que sous un angle de vue précis.", usage: "« Le crâne des Ambassadeurs de Holbein est une anamorphose célèbre. »", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'biz', name: "Affaires", icon: "▲", color: "#E8F5EE",
+    words: [
+      { word: "Chiffre d'affaires", pos: "nom masculin", definition: "Le montant total des ventes réalisées par une entreprise sur une période donnée, hors taxes.", usage: "« Le chiffre d'affaires du groupe a progressé de 8 % sur l'année. »", difficulty: 1 },
+      { word: "Dividende", pos: "nom masculin", definition: "La part des bénéfices d'une société distribuée à ses actionnaires.", usage: "« L'assemblée générale a voté le versement d'un dividende de 2 € par action. »", difficulty: 1 },
+      { word: "Actif", pos: "nom masculin", definition: "L'ensemble des biens et créances possédés par une entreprise et figurant à son bilan.", usage: "« Les immeubles et les brevets constituent une part importante de l'actif du groupe. »", difficulty: 1 },
+      { word: "Trésorerie", pos: "nom féminin", definition: "L'ensemble des liquidités immédiatement disponibles dont dispose une entreprise.", usage: "« Une trésorerie solide permet de faire face aux imprévus sans recourir à l'emprunt. »", difficulty: 1 },
+      { word: "Marge", pos: "nom féminin", definition: "La différence entre le prix de vente d'un produit et son coût de revient.", usage: "« La concurrence a fortement réduit les marges du secteur. »", difficulty: 1 },
+      { word: "Fonds propres", pos: "nom masculin pluriel", definition: "Les ressources financières appartenant durablement à une entreprise, apportées par les associés ou accumulées par les bénéfices.", usage: "« Les banques exigent des fonds propres suffisants avant d'accorder un prêt. »", difficulty: 2 },
+      { word: "Amortissement", pos: "nom masculin", definition: "La répartition comptable du coût d'un bien durable sur sa durée d'utilisation.", usage: "« L'amortissement des machines s'étale sur cinq ans. »", difficulty: 2 },
+      { word: "Plus-value", pos: "nom féminin", definition: "Le gain réalisé lors de la revente d'un bien à un prix supérieur à son prix d'achat.", usage: "« La plus-value immobilière est soumise à une taxation spécifique. »", difficulty: 2 },
+      { word: "Passif", pos: "nom masculin", definition: "L'ensemble des dettes et obligations financières d'une entreprise envers des tiers.", usage: "« Les emprunts bancaires figurent au passif du bilan. »", difficulty: 2 },
+      { word: "Provision", pos: "nom féminin", definition: "Une somme mise de côté en comptabilité pour anticiper une charge ou un risque futur probable.", usage: "« L'entreprise a constitué une provision pour couvrir le litige en cours. »", difficulty: 2 },
+      { word: "Usufruit", pos: "nom masculin", definition: "Le droit d'utiliser un bien et d'en percevoir les revenus sans en être propriétaire.", usage: "« Elle a cédé la nue-propriété de l'appartement tout en conservant l'usufruit. »", difficulty: 3 },
+      { word: "Nantissement", pos: "nom masculin", definition: "Une garantie donnée à un créancier sur un bien mobilier sans que celui-ci en soit dépossédé.", usage: "« Le fonds de commerce a été donné en nantissement pour obtenir le crédit. »", difficulty: 3 },
+      { word: "Affacturage", pos: "nom masculin", definition: "La technique consistant à céder ses créances à un organisme spécialisé qui se charge de leur recouvrement.", usage: "« L'affacturage permet aux PME d'améliorer rapidement leur trésorerie. »", difficulty: 3 },
+      { word: "Redressement", pos: "nom masculin", definition: "Une procédure judiciaire visant à sauver une entreprise en difficulté en réorganisant ses dettes.", usage: "« Le tribunal de commerce a prononcé l'ouverture d'un redressement judiciaire. »", difficulty: 3 },
+      { word: "Effet de levier", pos: "nom masculin", definition: "Le mécanisme par lequel l'endettement amplifie la rentabilité des capitaux investis.", usage: "« L'effet de levier fonctionne tant que le coût de la dette reste inférieur au rendement. »", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'law', name: "Droit", icon: "§", color: "#F5F0E6",
+    words: [
+      { word: "Plaignant", pos: "nom masculin", definition: "La personne qui dépose une plainte ou engage une action en justice contre autrui.", usage: "« Le plaignant réclame des dommages-intérêts pour le préjudice subi. »", difficulty: 1 },
+      { word: "Jurisprudence", pos: "nom féminin", definition: "L'ensemble des décisions de justice rendues, servant de référence pour interpréter la loi.", usage: "« La jurisprudence de la Cour de cassation fait autorité en matière civile. »", difficulty: 1 },
+      { word: "Audience", pos: "nom féminin", definition: "La séance publique pendant laquelle un tribunal entend les parties et rend sa décision.", usage: "« L'audience a été reportée à la demande de la défense. »", difficulty: 1 },
+      { word: "Contrat", pos: "nom masculin", definition: "Un accord de volontés entre deux ou plusieurs personnes créant des obligations juridiques.", usage: "« Le contrat de bail fixe les droits et devoirs du locataire. »", difficulty: 1 },
+      { word: "Procureur", pos: "nom masculin", definition: "Le magistrat chargé de représenter l'intérêt public et de requérir l'application de la loi.", usage: "« Le procureur a requis cinq ans de prison ferme. »", difficulty: 1 },
+      { word: "Prescription", pos: "nom féminin", definition: "L'extinction d'un droit ou d'une action en justice par l'écoulement d'un certain délai.", usage: "« L'action est irrecevable car il y a prescription depuis trois ans. »", difficulty: 2 },
+      { word: "Réquisitoire", pos: "nom masculin", definition: "Le discours par lequel le ministère public expose les charges et demande une peine.", usage: "« Le réquisitoire du procureur a duré plus de deux heures. »", difficulty: 2 },
+      { word: "Mise en demeure", pos: "nom féminin", definition: "Une sommation formelle enjoignant à une personne d'exécuter une obligation dans un délai fixé.", usage: "« Le fournisseur a envoyé une mise en demeure avant d'engager des poursuites. »", difficulty: 2 },
+      { word: "Dol", pos: "nom masculin", definition: "Une manœuvre frauduleuse visant à tromper une personne pour obtenir son consentement à un acte.", usage: "« Le contrat a été annulé pour dol : le vendeur avait caché un vice majeur. »", difficulty: 2 },
+      { word: "Huissier", pos: "nom masculin", definition: "L'officier ministériel chargé de signifier les actes de procédure et d'exécuter les décisions de justice.", usage: "« L'huissier a procédé à la saisie des biens du débiteur. »", difficulty: 2 },
+      { word: "Cassation", pos: "nom féminin", definition: "L'annulation d'une décision de justice par la juridiction suprême pour violation de la loi.", usage: "« L'arrêt de la cour d'appel a été cassé pour défaut de motivation. »", difficulty: 3 },
+      { word: "Récusation", pos: "nom féminin", definition: "La procédure permettant d'écarter un juge soupçonné de partialité dans une affaire.", usage: "« L'avocat a demandé la récusation du président en raison de ses liens avec la partie adverse. »", difficulty: 3 },
+      { word: "Subrogation", pos: "nom féminin", definition: "Le mécanisme par lequel une personne prend la place d'un créancier et hérite de ses droits.", usage: "« L'assureur qui indemnise la victime bénéficie d'une subrogation contre le responsable. »", difficulty: 3 },
+      { word: "Commis d'office", pos: "locution", definition: "Se dit d'un avocat désigné par le bâtonnier pour défendre une personne qui n'en a pas choisi.", usage: "« L'accusé sans ressources a bénéficié d'un avocat commis d'office. »", difficulty: 3 },
+      { word: "Ordonnance", pos: "nom féminin", definition: "Une décision rendue par un juge unique, statuant seul sur une question de procédure ou d'urgence.", usage: "« Le juge des référés a rendu une ordonnance interdisant la publication. »", difficulty: 2 },
+    ]
+  },
+  {
+    id: 'eng', name: "Français", icon: "¶", color: "#F0EBF8",
+    words: [
+      { word: "Alexandrin", pos: "nom masculin", definition: "Un vers de douze syllabes, traditionnellement coupé en deux hémistiches égaux par une césure.", usage: "« Racine et Corneille ont porté l'alexandrin à sa perfection. »", difficulty: 1 },
+      { word: "Périphrase", pos: "nom féminin", definition: "Une expression qui remplace un mot unique par plusieurs termes le décrivant.", usage: "« Dire 'la langue de Molière' pour le français est une périphrase. »", difficulty: 1 },
+      { word: "Didascalie", pos: "nom féminin", definition: "Une indication scénique donnée par l'auteur dans le texte d'une pièce de théâtre.", usage: "« La didascalie précise que le personnage entre 'en pleurant'. »", difficulty: 1 },
+      { word: "Pléonasme", pos: "nom masculin", definition: "Une répétition superflue de termes ayant le même sens dans une expression.", usage: "« 'Monter en haut' est un pléonasme fréquent à l'oral. »", difficulty: 1 },
+      { word: "Épithète", pos: "nom féminin", definition: "Un adjectif placé directement à côté du nom qu'il qualifie, sans verbe intermédiaire.", usage: "« Dans 'une nuit noire', 'noire' est épithète de 'nuit'. »", difficulty: 1 },
+      { word: "Litote", pos: "nom féminin", definition: "Une figure de style qui consiste à dire moins pour suggérer davantage, souvent par la négation.", usage: "« 'Va, je ne te hais point' est la litote la plus célèbre du théâtre français. »", difficulty: 2 },
+      { word: "Oxymore", pos: "nom masculin", definition: "L'alliance de deux termes de sens contradictoires dans une même expression.", usage: "« 'Cette obscure clarté' est l'oxymore le plus cité de Corneille. »", difficulty: 2 },
+      { word: "Hypallage", pos: "nom féminin", definition: "Une figure qui attribue à un mot ce qui conviendrait logiquement à un autre de la phrase.", usage: "« 'Rendre quelqu'un à la vie' pour 'rendre la vie à quelqu'un' est une hypallage. »", difficulty: 2 },
+      { word: "Anaphore", pos: "nom féminin", definition: "La répétition d'un même mot ou groupe en tête de phrases ou de vers successifs.", usage: "« 'Rome, l'unique objet de mon ressentiment ! Rome, à qui vient ton bras…' illustre l'anaphore. »", difficulty: 2 },
+      { word: "Chiasme", pos: "nom masculin", definition: "Une construction en miroir où les termes se répondent dans un ordre inversé.", usage: "« 'Il faut manger pour vivre et non vivre pour manger' est un chiasme. »", difficulty: 2 },
+      { word: "Aposiopèse", pos: "nom féminin", definition: "L'interruption brusque d'une phrase, le locuteur laissant sa pensée en suspens.", usage: "« 'Si jamais je t'y reprends…' est une aposiopèse chargée de menace. »", difficulty: 3 },
+      { word: "Zeugme", pos: "nom masculin", definition: "Une figure reliant à un même mot deux compléments de nature différente, l'un concret et l'autre abstrait.", usage: "« 'Vêtu de probité candide et de lin blanc' est un zeugme célèbre de Hugo. »", difficulty: 3 },
+      { word: "Prétérition", pos: "nom féminin", definition: "Une figure par laquelle on affirme passer sous silence ce qu'on dit pourtant clairement.", usage: "« 'Je ne dirai rien de son avarice' introduit une prétérition. »", difficulty: 3 },
+      { word: "Synecdoque", pos: "nom féminin", definition: "Une figure remplaçant un terme par un autre qui lui est lié par inclusion : la partie pour le tout ou l'inverse.", usage: "« 'Cent voiles à l'horizon' pour 'cent bateaux' est une synecdoque. »", difficulty: 3 },
+      { word: "Paronomase", pos: "nom féminin", definition: "Le rapprochement de mots aux sonorités voisines mais de sens différents.", usage: "« 'Qui se ressemble s'assemble' exploite la paronomase. »", difficulty: 3 },
+    ]
+  },
+  {
+    id: 'ent', name: "Cinéma & Spectacle", icon: "♦", color: "#FFECEF",
+    words: [
+      { word: "Générique", pos: "nom masculin", definition: "La liste des noms des personnes ayant participé à la réalisation d'un film, diffusée au début ou à la fin.", usage: "« Il reste toujours jusqu'à la fin du générique pour voir la scène post-crédits. »", difficulty: 1 },
+      { word: "Bande-annonce", pos: "nom féminin", definition: "Un court montage promotionnel présentant des extraits d'un film à venir.", usage: "« La bande-annonce révélait déjà trop de retournements de l'intrigue. »", difficulty: 1 },
+      { word: "Doublage", pos: "nom masculin", definition: "Le remplacement de la bande sonore originale d'un film par des voix dans une autre langue.", usage: "« Le doublage français du film a été salué pour sa fidélité au ton original. »", difficulty: 1 },
+      { word: "Figurant", pos: "nom masculin", definition: "Une personne jouant un rôle secondaire sans réplique, servant à peupler une scène.", usage: "« Des centaines de figurants ont été recrutés pour la scène de bataille. »", difficulty: 1 },
+      { word: "Cascade", pos: "nom féminin", definition: "Une scène dangereuse ou spectaculaire réalisée par un professionnel spécialisé à la place de l'acteur.", usage: "« La cascade de la poursuite sur les toits a nécessité trois semaines de préparation. »", difficulty: 1 },
+      { word: "Travelling", pos: "nom masculin", definition: "Un mouvement de caméra sur rails ou véhicule, accompagnant un sujet ou parcourant un décor.", usage: "« Le travelling latéral suit le personnage le long du quai désert. »", difficulty: 2 },
+      { word: "Plan-séquence", pos: "nom masculin", definition: "Une scène tournée en une seule prise continue, sans coupure au montage.", usage: "« Le plan-séquence d'ouverture de La Soif du mal dure plus de trois minutes. »", difficulty: 2 },
+      { word: "Contre-plongée", pos: "nom féminin", definition: "Un cadrage où la caméra est placée en dessous du sujet, le filmant de bas en haut.", usage: "« La contre-plongée écrase le spectateur et grandit le personnage menaçant. »", difficulty: 2 },
+      { word: "Hors-champ", pos: "nom masculin", definition: "L'espace invisible à l'écran mais présent dans la scène, suggéré par le son ou le regard des personnages.", usage: "« Le cri venait du hors-champ, laissant l'horreur à l'imagination du spectateur. »", difficulty: 2 },
+      { word: "Bruitage", pos: "nom masculin", definition: "La création en studio de sons d'ambiance ajoutés à un film pour renforcer son réalisme sonore.", usage: "« Le bruitage des pas dans la neige a été réalisé avec de la fécule de maïs. »", difficulty: 2 },
+      { word: "Raccord", pos: "nom masculin", definition: "La continuité visuelle ou sonore entre deux plans successifs, assurant la fluidité de l'enchaînement.", usage: "« Un faux raccord a trahi la coupure : le verre change de main entre deux plans. »", difficulty: 3 },
+      { word: "Diégèse", pos: "nom féminin", definition: "L'univers fictionnel dans lequel se déroule l'histoire racontée, avec ses lois et sa cohérence propres.", usage: "« La musique entendue par les personnages appartient à la diégèse, contrairement à la bande originale. »", difficulty: 3 },
+      { word: "Ellipse", pos: "nom féminin", definition: "Un saut temporel dans le récit, omettant une période jugée inutile à la narration.", usage: "« L'ellipse nous fait passer de l'enfance à l'âge adulte en un seul fondu au noir. »", difficulty: 3 },
+      { word: "Champ-contrechamp", pos: "nom masculin", definition: "Une technique de montage alternant les points de vue de deux interlocuteurs en face-à-face.", usage: "« Le dialogue repose sur un champ-contrechamp classique qui rythme l'échange. »", difficulty: 3 },
+      { word: "Nuit américaine", pos: "nom féminin", definition: "Un procédé permettant de tourner en plein jour des scènes censées se dérouler la nuit, grâce à des filtres.", usage: "« Truffaut a donné à cette technique le titre de l'un de ses films. »", difficulty: 3 },
+    ]
+  },
+];
+
+
+const EXTRA_CATEGORIES_EN = [
+  {
+    id: 'daily', name: 'Everyday Life', icon: '☀', color: '#FFF5E8',
+    tagline: 'Routine, home, errands, and community language.',
+    keywords: ['daily', 'routine', 'home', 'community', 'everyday', 'life'],
+    words: [
+      { word: 'Errand', pos: 'noun', definition: 'A short trip or task done to complete a practical duty, such as shopping or dropping something off.', usage: '"I have to run a quick errand before dinner."', difficulty: 1 },
+      { word: 'Receipt', pos: 'noun', definition: 'A written or digital record showing that payment has been made.', usage: '"Keep the receipt in case you need to return the item."', difficulty: 1 },
+      { word: 'Commute', pos: 'verb', definition: 'To travel regularly between home and work or school.', usage: '"She commutes by bus every morning."', difficulty: 1 },
+      { word: 'Household', pos: 'noun', definition: 'The people who live together in one home, or the home considered as a unit.', usage: '"Each household received a recycling guide."', difficulty: 2 },
+      { word: 'Reliable', pos: 'adjective', definition: 'Consistently dependable and able to be trusted.', usage: '"A reliable neighbour can make daily life much easier."', difficulty: 2 },
+      { word: 'Courtesy', pos: 'noun', definition: 'Polite behaviour that shows respect and consideration for others.', usage: '"He thanked the driver as a courtesy."', difficulty: 2 },
+      { word: 'Resourceful', pos: 'adjective', definition: 'Able to solve problems quickly and creatively using available materials.', usage: '"Moving to a new country often makes people more resourceful."', difficulty: 3 },
+      { word: 'Neighborhood', pos: 'noun', definition: 'A particular area of a town or city where people live and interact as a local community.', usage: '"The neighborhood hosts a street market every summer."', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'business', name: 'Business & Marketing', icon: '◔', color: '#EEF7FF',
+    tagline: 'Branding, customers, strategy, and workplace vocabulary.',
+    keywords: ['business', 'marketing', 'brand', 'customer', 'career', 'professional'],
+    words: [
+      { word: 'Audience', pos: 'noun', definition: 'The specific group of people a message, product, or campaign is designed for.', usage: '"The campaign was built for a student audience."', difficulty: 1 },
+      { word: 'Budget', pos: 'noun', definition: 'A plan that shows how much money is available and how it will be spent.', usage: '"The team approved a modest social media budget."', difficulty: 1 },
+      { word: 'Launch', pos: 'noun', definition: 'The formal introduction of a new product, service, or campaign to the public.', usage: '"The product launch is scheduled for September."', difficulty: 1 },
+      { word: 'Positioning', pos: 'noun', definition: 'The way a brand or product is presented in the minds of customers compared with competitors.', usage: '"Clear positioning helps people understand the brand quickly."', difficulty: 2 },
+      { word: 'Insight', pos: 'noun', definition: 'A useful understanding of consumer behaviour that helps explain why people act in a certain way.', usage: '"The survey revealed an insight about convenience and trust."', difficulty: 2 },
+      { word: 'Conversion', pos: 'noun', definition: 'The act of turning a potential customer into someone who takes the desired action, such as buying or signing up.', usage: '"A simpler checkout flow improved conversion."', difficulty: 2 },
+      { word: 'Differentiation', pos: 'noun', definition: 'The quality of standing out from alternatives by offering something distinct or valuable.', usage: '"Taste and packaging became the brand’s main differentiation points."', difficulty: 3 },
+      { word: 'Stakeholder', pos: 'noun', definition: 'A person or group with an interest in the outcome of a project, business, or decision.', usage: '"Every stakeholder wanted to see the final presentation deck."', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'tech', name: 'Technology', icon: '⌘', color: '#F3EEFB',
+    tagline: 'Digital tools, apps, systems, and AI-related terms.',
+    keywords: ['technology', 'digital', 'app', 'software', 'ai', 'computer'],
+    words: [
+      { word: 'Interface', pos: 'noun', definition: 'The visual or functional point where a person interacts with a digital system or device.', usage: '"A clear interface makes the app easier to use."', difficulty: 1 },
+      { word: 'Upload', pos: 'verb', definition: 'To send a file or piece of data from one device to an online system or another device.', usage: '"Please upload your assignment before midnight."', difficulty: 1 },
+      { word: 'Password', pos: 'noun', definition: 'A secret string of characters used to access a digital account or service.', usage: '"Create a strong password with letters, numbers, and symbols."', difficulty: 1 },
+      { word: 'Algorithm', pos: 'noun', definition: 'A set of rules or steps a computer follows to solve a problem or complete a task.', usage: '"The recommendation algorithm learns from user behaviour."', difficulty: 2 },
+      { word: 'Database', pos: 'noun', definition: 'An organized collection of information stored electronically so it can be searched and updated.', usage: '"The team stored customer records in a secure database."', difficulty: 2 },
+      { word: 'Automation', pos: 'noun', definition: 'The use of technology to perform tasks with minimal human intervention.', usage: '"Automation reduced the time needed for repetitive admin work."', difficulty: 2 },
+      { word: 'Interoperable', pos: 'adjective', definition: 'Able to work smoothly with other systems, devices, or software.', usage: '"The new platform must be interoperable with existing tools."', difficulty: 3 },
+      { word: 'Scalability', pos: 'noun', definition: 'The ability of a system or process to handle growth without losing performance.', usage: '"Scalability matters when an app suddenly gains thousands of users."', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'health', name: 'Health & Well-being', icon: '✚', color: '#EAF7F0',
+    tagline: 'Wellness, habits, care, and quality-of-life vocabulary.',
+    keywords: ['health', 'wellness', 'care', 'habit', 'mindset', 'well-being'],
+    words: [
+      { word: 'Hydration', pos: 'noun', definition: 'The process of taking in enough water to keep the body functioning properly.', usage: '"Hydration is especially important during hot weather."', difficulty: 1 },
+      { word: 'Balance', pos: 'noun', definition: 'A healthy and stable relationship between different parts of life, such as work, study, and rest.', usage: '"She is trying to create better balance in her weekly routine."', difficulty: 1 },
+      { word: 'Recovery', pos: 'noun', definition: 'The period or process of returning to normal strength or health after stress, illness, or intense activity.', usage: '"Good sleep supports muscle recovery."', difficulty: 1 },
+      { word: 'Resilience', pos: 'noun', definition: 'The ability to recover, adapt, and keep going after difficulties or setbacks.', usage: '"Resilience helps students handle pressure more calmly."', difficulty: 2 },
+      { word: 'Nourishment', pos: 'noun', definition: 'Food or other support that helps a person stay healthy and strong.', usage: '"Warm meals can provide both comfort and nourishment."', difficulty: 2 },
+      { word: 'Preventive', pos: 'adjective', definition: 'Intended to stop illness or problems before they happen.', usage: '"Preventive care can reduce long-term health risks."', difficulty: 2 },
+      { word: 'Mindfulness', pos: 'noun', definition: 'The practice of paying calm, focused attention to the present moment.', usage: '"A short mindfulness break helped her reset before class."', difficulty: 3 },
+      { word: 'Sedentary', pos: 'adjective', definition: 'Involving too much sitting and too little physical movement.', usage: '"Long study sessions can become sedentary without breaks."', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'travel', name: 'Travel & Culture', icon: '✈', color: '#FFF0F2',
+    tagline: 'Navigation, places, customs, and moving through new environments.',
+    keywords: ['travel', 'culture', 'trip', 'airport', 'customs', 'navigation'],
+    words: [
+      { word: 'Itinerary', pos: 'noun', definition: 'A planned route or schedule for a trip, including places and times.', usage: '"Their itinerary included Montreal, Ottawa, and Toronto."', difficulty: 1 },
+      { word: 'Transit', pos: 'noun', definition: 'A system of public transportation, such as buses, trains, or subways.', usage: '"The city’s transit system runs late on weekends."', difficulty: 1 },
+      { word: 'Landmark', pos: 'noun', definition: 'A well-known building, place, or feature that helps identify an area.', usage: '"The tower is one of the city’s most famous landmarks."', difficulty: 1 },
+      { word: 'Hospitality', pos: 'noun', definition: 'The friendly and generous treatment of guests or visitors.', usage: '"The village was known for its warmth and hospitality."', difficulty: 2 },
+      { word: 'Custom', pos: 'noun', definition: 'A traditional way of behaving or celebrating in a particular group or place.', usage: '"Greeting people with both cheeks is a common custom there."', difficulty: 2 },
+      { word: 'Immersion', pos: 'noun', definition: 'Deep involvement in a language, culture, or environment so that learning happens naturally.', usage: '"Language immersion can improve fluency quickly."', difficulty: 2 },
+      { word: 'Multilingual', pos: 'adjective', definition: 'Able to use or involving several languages.', usage: '"The conference welcomed a multilingual audience."', difficulty: 3 },
+      { word: 'Orientation', pos: 'noun', definition: 'Guidance or information that helps someone understand a new place, system, or environment.', usage: '"New students attended an orientation before classes began."', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'communication', name: 'Communication & Emotions', icon: '✦', color: '#F8F2FF',
+    tagline: 'Expressing feelings, relationships, and social interaction.',
+    keywords: ['communication', 'emotion', 'conversation', 'relationship', 'expression', 'social'],
+    words: [
+      { word: 'Encourage', pos: 'verb', definition: 'To give someone support, confidence, or hope.', usage: '"A kind message can encourage someone before an exam."', difficulty: 1 },
+      { word: 'Apology', pos: 'noun', definition: 'A statement expressing regret for something wrong or hurtful.', usage: '"His sincere apology helped repair the conversation."', difficulty: 1 },
+      { word: 'Respectful', pos: 'adjective', definition: 'Showing politeness and consideration toward others.', usage: '"Even in disagreement, she stayed respectful."', difficulty: 1 },
+      { word: 'Empathy', pos: 'noun', definition: 'The ability to understand and share another person’s feelings.', usage: '"Empathy is essential in supportive friendships."', difficulty: 2 },
+      { word: 'Reassure', pos: 'verb', definition: 'To help someone feel less worried by giving comfort or confidence.', usage: '"He tried to reassure his friend after the stressful meeting."', difficulty: 2 },
+      { word: 'Vulnerable', pos: 'adjective', definition: 'Open to emotional hurt, criticism, or difficulty.', usage: '"Being honest sometimes means feeling vulnerable."', difficulty: 2 },
+      { word: 'Misinterpret', pos: 'verb', definition: 'To understand something in the wrong way.', usage: '"Short text messages are easy to misinterpret without tone."', difficulty: 3 },
+      { word: 'Nuance', pos: 'noun', definition: 'A subtle difference in meaning, feeling, or tone.', usage: '"Fluent speakers often catch nuance that learners miss at first."', difficulty: 3 }
+    ]
+  }
+];
+
+const EXTRA_CATEGORIES_FR = [
+  {
+    id: 'quotidien', name: 'Vie quotidienne', icon: '☀', color: '#FFF5E8',
+    tagline: 'Routine, maison, courses et langage du quotidien.',
+    keywords: ['quotidien', 'routine', 'maison', 'communauté', 'vie'],
+    words: [
+      { word: 'Course', pos: 'nom', definition: 'Petit déplacement ou tâche pratique que l’on fait pour acheter, déposer ou régler quelque chose.', usage: '« Je dois faire une course avant le dîner. »', difficulty: 1 },
+      { word: 'Reçu', pos: 'nom', definition: 'Preuve écrite ou numérique montrant qu’un paiement a été effectué.', usage: '« Garde le reçu si tu veux retourner l’article. »', difficulty: 1 },
+      { word: 'Déplacement', pos: 'nom', definition: 'Trajet régulier entre la maison et le travail ou les études.', usage: '« Son déplacement quotidien en métro prend quarante minutes. »', difficulty: 1 },
+      { word: 'Foyer', pos: 'nom', definition: 'Ensemble des personnes vivant dans un même logement, ou le logement considéré comme unité.', usage: '« Chaque foyer a reçu un guide de recyclage. »', difficulty: 2 },
+      { word: 'Fiable', pos: 'adjectif', definition: 'Sur qui l’on peut compter de façon constante.', usage: '« Un voisin fiable peut beaucoup aider au quotidien. »', difficulty: 2 },
+      { word: 'Courtoisie', pos: 'nom', definition: 'Politesse qui montre du respect et de la considération envers les autres.', usage: '« Il a remercié le chauffeur par courtoisie. »', difficulty: 2 },
+      { word: 'Débrouillard', pos: 'adjectif', definition: 'Capable de trouver rapidement des solutions avec les moyens disponibles.', usage: '« Vivre dans un nouveau pays rend souvent plus débrouillard. »', difficulty: 3 },
+      { word: 'Quartier', pos: 'nom', definition: 'Partie d’une ville où les gens vivent et forment une communauté locale.', usage: '« Le quartier organise un marché de rue chaque été. »', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'affaires', name: 'Affaires & marketing', icon: '◔', color: '#EEF7FF',
+    tagline: 'Marque, clients, stratégie et langage professionnel.',
+    keywords: ['affaires', 'marketing', 'marque', 'client', 'professionnel', 'carrière'],
+    words: [
+      { word: 'Public', pos: 'nom', definition: 'Groupe précis de personnes visé par un message, un produit ou une campagne.', usage: '« La campagne visait un public étudiant. »', difficulty: 1 },
+      { word: 'Budget', pos: 'nom', definition: 'Plan indiquant l’argent disponible et la façon dont il sera utilisé.', usage: '« L’équipe a validé un petit budget média. »', difficulty: 1 },
+      { word: 'Lancement', pos: 'nom', definition: 'Introduction officielle d’un produit, d’un service ou d’une campagne auprès du public.', usage: '« Le lancement du produit est prévu pour septembre. »', difficulty: 1 },
+      { word: 'Positionnement', pos: 'nom', definition: 'Manière dont une marque est perçue dans l’esprit du public par rapport aux concurrents.', usage: '« Un bon positionnement aide le public à comprendre la marque. »', difficulty: 2 },
+      { word: 'Insight', pos: 'nom', definition: 'Compréhension utile du comportement des consommateurs qui explique pourquoi ils agissent ainsi.', usage: '« L’enquête a révélé un insight sur la confiance et la commodité. »', difficulty: 2 },
+      { word: 'Conversion', pos: 'nom', definition: 'Action par laquelle une personne passe de l’intérêt à l’action souhaitée, comme acheter ou s’inscrire.', usage: '« Un parcours plus simple a amélioré la conversion. »', difficulty: 2 },
+      { word: 'Différenciation', pos: 'nom', definition: 'Capacité à se distinguer des alternatives grâce à une proposition unique ou précieuse.', usage: '« Le goût et le packaging sont devenus les principaux points de différenciation. »', difficulty: 3 },
+      { word: 'Partie prenante', pos: 'nom', definition: 'Personne ou groupe ayant un intérêt direct dans un projet, une décision ou une organisation.', usage: '« Chaque partie prenante voulait voir la présentation finale. »', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'technologie', name: 'Technologie', icon: '⌘', color: '#F3EEFB',
+    tagline: 'Outils numériques, applications, systèmes et IA.',
+    keywords: ['technologie', 'numérique', 'application', 'logiciel', 'ia', 'ordinateur'],
+    words: [
+      { word: 'Interface', pos: 'nom', definition: 'Point visuel ou fonctionnel par lequel une personne interagit avec un système numérique.', usage: '« Une interface claire rend l’application plus facile à utiliser. »', difficulty: 1 },
+      { word: 'Téléverser', pos: 'verbe', definition: 'Envoyer un fichier ou des données depuis un appareil vers un service en ligne.', usage: '« Téléverse ton devoir avant minuit. »', difficulty: 1 },
+      { word: 'Mot de passe', pos: 'nom', definition: 'Suite secrète de caractères permettant d’accéder à un compte ou un service.', usage: '« Crée un mot de passe fort avec des lettres et des chiffres. »', difficulty: 1 },
+      { word: 'Algorithme', pos: 'nom', definition: 'Suite d’étapes ou de règles qu’un système suit pour résoudre un problème ou accomplir une tâche.', usage: '« L’algorithme de recommandation apprend du comportement des utilisateurs. »', difficulty: 2 },
+      { word: 'Base de données', pos: 'nom', definition: 'Ensemble organisé d’informations stockées électroniquement pour être consultées et mises à jour.', usage: '« Les dossiers clients étaient stockés dans une base de données sécurisée. »', difficulty: 2 },
+      { word: 'Automatisation', pos: 'nom', definition: 'Utilisation de la technologie pour exécuter des tâches avec peu d’intervention humaine.', usage: '« L’automatisation a réduit le temps consacré aux tâches répétitives. »', difficulty: 2 },
+      { word: 'Interopérable', pos: 'adjectif', definition: 'Capable de fonctionner correctement avec d’autres systèmes, appareils ou logiciels.', usage: '« La nouvelle plateforme doit être interopérable avec les outils existants. »', difficulty: 3 },
+      { word: 'Évolutivité', pos: 'nom', definition: 'Capacité d’un système à supporter la croissance sans perdre en performance.', usage: '« L’évolutivité devient cruciale lorsqu’une application attire des milliers d’utilisateurs. »', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'sante', name: 'Santé & bien-être', icon: '✚', color: '#EAF7F0',
+    tagline: 'Habitudes, équilibre, soins et qualité de vie.',
+    keywords: ['santé', 'bien-être', 'soin', 'habitude', 'équilibre', 'qualité de vie'],
+    words: [
+      { word: 'Hydratation', pos: 'nom', definition: 'Apport suffisant en eau pour permettre au corps de bien fonctionner.', usage: '« L’hydratation est particulièrement importante pendant les fortes chaleurs. »', difficulty: 1 },
+      { word: 'Équilibre', pos: 'nom', definition: 'Relation saine et stable entre plusieurs aspects de la vie, comme le travail, les études et le repos.', usage: '« Elle cherche un meilleur équilibre dans sa routine hebdomadaire. »', difficulty: 1 },
+      { word: 'Récupération', pos: 'nom', definition: 'Période ou processus par lequel on retrouve ses forces après un effort, un stress ou une maladie.', usage: '« Un bon sommeil favorise la récupération. »', difficulty: 1 },
+      { word: 'Résilience', pos: 'nom', definition: 'Capacité à rebondir, à s’adapter et à continuer après une difficulté.', usage: '« La résilience aide les étudiants à mieux gérer la pression. »', difficulty: 2 },
+      { word: 'Nourrissant', pos: 'adjectif', definition: 'Qui apporte ce qu’il faut au corps pour rester en bonne santé et plein d’énergie.', usage: '« Un repas simple mais nourrissant peut faire du bien. »', difficulty: 2 },
+      { word: 'Préventif', pos: 'adjectif', definition: 'Qui sert à éviter un problème avant qu’il ne survienne.', usage: '« Les soins préventifs peuvent réduire les risques à long terme. »', difficulty: 2 },
+      { word: 'Pleine conscience', pos: 'nom', definition: 'Pratique consistant à porter une attention calme et consciente au moment présent.', usage: '« Une courte pause de pleine conscience l’a aidée à se recentrer. »', difficulty: 3 },
+      { word: 'Sédentaire', pos: 'adjectif', definition: 'Qui implique trop peu de mouvement physique et beaucoup de temps assis.', usage: '« De longues séances d’étude peuvent devenir très sédentaires. »', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'voyage', name: 'Voyage & culture', icon: '✈', color: '#FFF0F2',
+    tagline: 'Déplacements, lieux, coutumes et nouveaux environnements.',
+    keywords: ['voyage', 'culture', 'transport', 'coutume', 'navigation', 'nouveau pays'],
+    words: [
+      { word: 'Itinéraire', pos: 'nom', definition: 'Parcours ou programme prévu pour un voyage, avec les lieux et les horaires.', usage: '« Leur itinéraire comprenait Montréal, Ottawa et Toronto. »', difficulty: 1 },
+      { word: 'Transport en commun', pos: 'nom', definition: 'Ensemble des moyens de transport publics comme le bus, le train ou le métro.', usage: '« Le transport en commun fonctionne tard le week-end. »', difficulty: 1 },
+      { word: 'Repère', pos: 'nom', definition: 'Lieu, bâtiment ou élément connu qui aide à s’orienter dans un espace.', usage: '« La tour sert de repère pour retrouver la place centrale. »', difficulty: 1 },
+      { word: 'Hospitalité', pos: 'nom', definition: 'Accueil chaleureux et généreux réservé aux visiteurs.', usage: '« Le village était connu pour son hospitalité. »', difficulty: 2 },
+      { word: 'Coutume', pos: 'nom', definition: 'Habitude ou tradition caractéristique d’un lieu, d’un groupe ou d’une culture.', usage: '« Saluer avec deux bises est une coutume dans certaines régions. »', difficulty: 2 },
+      { word: 'Immersion', pos: 'nom', definition: 'Fait d’être plongé profondément dans une langue ou une culture, de manière à apprendre naturellement.', usage: '« L’immersion linguistique peut accélérer les progrès. »', difficulty: 2 },
+      { word: 'Multilingue', pos: 'adjectif', definition: 'Qui utilise ou concerne plusieurs langues.', usage: '« L’événement accueillait un public multilingue. »', difficulty: 3 },
+      { word: 'Orientation', pos: 'nom', definition: 'Informations ou accompagnement destinés à aider quelqu’un dans un nouvel environnement.', usage: '« Les nouveaux étudiants ont suivi une séance d’orientation. »', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'communication', name: 'Communication & émotions', icon: '✦', color: '#F8F2FF',
+    tagline: 'Exprimer ses émotions, soutenir les autres et mieux communiquer.',
+    keywords: ['communication', 'émotions', 'conversation', 'relation', 'expression', 'social'],
+    words: [
+      { word: 'Encourager', pos: 'verbe', definition: 'Donner du soutien, de la confiance ou de l’espoir à quelqu’un.', usage: '« Un message gentil peut encourager quelqu’un avant un examen. »', difficulty: 1 },
+      { word: 'Excuse', pos: 'nom', definition: 'Parole par laquelle on exprime son regret après avoir fait quelque chose de blessant ou de mal.', usage: '« Ses excuses sincères ont apaisé la discussion. »', difficulty: 1 },
+      { word: 'Respectueux', pos: 'adjectif', definition: 'Qui montre de la politesse et de la considération envers les autres.', usage: '« Même en désaccord, elle est restée respectueuse. »', difficulty: 1 },
+      { word: 'Empathie', pos: 'nom', definition: 'Capacité à comprendre et ressentir ce qu’une autre personne vit.', usage: '« L’empathie est essentielle dans les amitiés de soutien. »', difficulty: 2 },
+      { word: 'Rassurer', pos: 'verbe', definition: 'Aider quelqu’un à se sentir moins inquiet en apportant du réconfort ou de la confiance.', usage: '« Il a essayé de rassurer son amie après la réunion stressante. »', difficulty: 2 },
+      { word: 'Vulnérable', pos: 'adjectif', definition: 'Exposé au risque d’être blessé émotionnellement ou touché par une difficulté.', usage: '« Être honnête peut parfois rendre vulnérable. »', difficulty: 2 },
+      { word: 'Mal interpréter', pos: 'verbe', definition: 'Comprendre quelque chose d’une façon incorrecte.', usage: '« Les messages très courts sont faciles à mal interpréter. »', difficulty: 3 },
+      { word: 'Nuance', pos: 'nom', definition: 'Différence fine et subtile dans le sens, le ton ou le ressenti.', usage: '« Les locuteurs avancés perçoivent souvent la nuance plus vite. »', difficulty: 3 }
+    ]
+  }
+];
+
+function getCustomCategories(lang) {
+  const store = safeGet('lexicon:customPacks') || { en: [], fr: [] };
+  return Array.isArray(store[lang]) ? store[lang] : [];
+}
+
+function setCustomCategories(lang, categories) {
+  const store = safeGet('lexicon:customPacks') || { en: [], fr: [] };
+  store[lang] = categories;
+  safeSet('lexicon:customPacks', store);
+}
+
+function builtInCats(lang) {
+  return lang === 'fr' ? [...CATEGORIES_FR, ...EXTRA_CATEGORIES_FR] : [...CATEGORIES_EN, ...EXTRA_CATEGORIES_EN];
+}
+
+function normalizeWordEntry(entry) {
+  if (!entry || !entry.word || !entry.definition) return null;
+  return {
+    word: String(entry.word).trim(),
+    pos: String(entry.pos || 'term').trim(),
+    definition: String(entry.definition).trim(),
+    usage: String(entry.usage || '').trim(),
+    difficulty: Math.min(3, Math.max(1, Number(entry.difficulty) || 2))
+  };
+}
+
+function normalizeCategoryEntry(entry, lang) {
+  if (!entry || !entry.name || !Array.isArray(entry.words)) return null;
+  const words = entry.words.map(normalizeWordEntry).filter(Boolean);
+  if (!words.length) return null;
+  const seed = String(entry.id || entry.name).toLowerCase().replace(/[^a-z0-9à-ÿ]+/gi, '-').replace(/^-|-$/g, '');
+  return {
+    id: `${seed}-${lang}-custom`,
+    name: String(entry.name).trim(),
+    icon: String(entry.icon || '✦').trim(),
+    color: String(entry.color || '#F5F5F5').trim(),
+    tagline: String(entry.tagline || entry.description || '').trim(),
+    keywords: Array.isArray(entry.keywords) ? entry.keywords.map(k => String(k).trim()).filter(Boolean) : [],
+    words
+  };
+}
+
+const STARTER_PACK = {"en":[{"id":"community-services","name":"Community Services","icon":"✦","color":"#EEF6FF","tagline":"Useful words for schools, clinics, libraries, and local support.","keywords":["community","services","support","public","daily life"],"words":[{"word":"Appointment","pos":"noun","definition":"A scheduled time to meet with a professional such as a doctor, advisor, or counselor.","usage":"\"She booked an appointment with the academic advisor for next Tuesday.\"","difficulty":1},{"word":"Eligibility","pos":"noun","definition":"The state of meeting the conditions required to qualify for a service, program, or benefit.","usage":"\"The website explains the eligibility rules for the housing program.\"","difficulty":2},{"word":"Interpreter","pos":"noun","definition":"A person who translates spoken language between people who do not share the same language.","usage":"\"An interpreter helped the family during the medical visit.\"","difficulty":2},{"word":"Outreach","pos":"noun","definition":"Organized efforts to provide information, support, or services to people in a community.","usage":"\"The nonprofit runs outreach programs for new arrivals.\"","difficulty":3}]}],"fr":[{"id":"services-communautaires","name":"Services communautaires","icon":"✦","color":"#EEF6FF","tagline":"Vocabulaire utile pour l'école, la santé, la bibliothèque et l'aide locale.","keywords":["communauté","services","aide","quotidien"],"words":[{"word":"Rendez-vous","pos":"nom masculin","definition":"Heure fixée à l'avance pour rencontrer un professionnel, comme un médecin ou un conseiller.","usage":"« Elle a pris un rendez-vous avec la conseillère pédagogique pour mardi prochain. »","difficulty":1},{"word":"Admissibilité","pos":"nom féminin","definition":"Fait de remplir les conditions nécessaires pour avoir droit à un service, un programme ou une aide.","usage":"« Le site précise les critères d'admissibilité au programme de logement. »","difficulty":2},{"word":"Interprète","pos":"nom","definition":"Personne qui traduit oralement entre des interlocuteurs ne parlant pas la même langue.","usage":"« Une interprète a accompagné la famille lors de la consultation médicale. »","difficulty":2},{"word":"Sensibilisation","pos":"nom féminin","definition":"Action d'aller vers un public pour l'informer, l'accompagner ou lui proposer un service.","usage":"« L'association mène des actions de sensibilisation auprès des nouveaux arrivants. »","difficulty":3}]}]};
+
+
+CATEGORIES_EN.push(
+  {
+    id: 'health-care', name: 'Health & Care', icon: '✚', color: '#F0FBF4',
+    tagline: 'Helpful words for clinics, wellness, and everyday care.',
+    keywords: ['health','care','clinic','wellness','doctor'],
+    words: [
+      { word: 'Prescription', pos: 'noun', definition: 'A written instruction from a healthcare professional authorizing a specific medicine or treatment.', usage: '"The pharmacist checked the prescription before handing over the medication."', difficulty: 1 },
+      { word: 'Symptoms', pos: 'noun', definition: 'Physical or mental signs that may indicate an illness or condition.', usage: '"She described her symptoms clearly so the nurse could help faster."', difficulty: 1 },
+      { word: 'Hydration', pos: 'noun', definition: 'The process of taking in enough water or fluids to keep the body functioning well.', usage: '"Good hydration is important during long study days and hot weather."', difficulty: 2 },
+      { word: 'Diagnosis', pos: 'noun', definition: 'The identification of a disease or condition based on examination, symptoms, and tests.', usage: '"The diagnosis helped the family understand the next treatment steps."', difficulty: 2 },
+      { word: 'Rehabilitation', pos: 'noun', definition: 'A structured process that helps someone recover skills, strength, or function after illness or injury.', usage: '"Physical rehabilitation supported his recovery after surgery."', difficulty: 3 },
+      { word: 'Preventive', pos: 'adjective', definition: 'Intended to stop a problem or illness before it happens.', usage: '"Preventive care includes checkups, vaccines, and healthy habits."', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'travel-transit', name: 'Travel & Transit', icon: '✈', color: '#EBF1FD',
+    tagline: 'Vocabulary for airports, buses, trains, and movement between places.',
+    keywords: ['travel','airport','transit','ticket','journey'],
+    words: [
+      { word: 'Itinerary', pos: 'noun', definition: 'A plan or schedule showing the route and timing of a trip.', usage: '"Her itinerary included Toronto, Montreal, and Quebec City."', difficulty: 1 },
+      { word: 'Platform', pos: 'noun', definition: 'The raised area beside train tracks where passengers board and leave a train.', usage: '"The departure board showed the platform number for the next train."', difficulty: 1 },
+      { word: 'Layover', pos: 'noun', definition: 'A stop between parts of a longer journey, especially during air travel.', usage: '"They had a two-hour layover before the connecting flight."', difficulty: 2 },
+      { word: 'Commute', pos: 'verb', definition: 'To travel regularly between home and work, school, or another routine destination.', usage: '"Many students commute by bus and subway every day."', difficulty: 2 },
+      { word: 'Navigation', pos: 'noun', definition: 'The process of planning and following a route from one place to another.', usage: '"Good navigation helps newcomers feel confident in a new city."', difficulty: 2 },
+      { word: 'Disembark', pos: 'verb', definition: 'To leave a ship, train, bus, or airplane after a trip.', usage: '"Passengers were asked to disembark from the rear doors."', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'housing-renting', name: 'Housing & Renting', icon: '⌂', color: '#FFF8E1',
+    tagline: 'Useful words for renting, moving, and daily home life.',
+    keywords: ['housing','rent','apartment','lease','move'],
+    words: [
+      { word: 'Lease', pos: 'noun', definition: 'A legal agreement allowing someone to use a property for a set period in exchange for payment.', usage: '"She signed a one-year lease for the apartment near campus."', difficulty: 1 },
+      { word: 'Deposit', pos: 'noun', definition: 'Money paid in advance as security against damage or non-payment.', usage: '"The landlord returned the deposit after the unit inspection."', difficulty: 1 },
+      { word: 'Utilities', pos: 'noun', definition: 'Essential services such as electricity, water, heating, and internet used in a home.', usage: '"The rent looked affordable, but the utilities were extra."', difficulty: 2 },
+      { word: 'Maintenance', pos: 'noun', definition: 'Work done to keep a building or object in good condition.', usage: '"Maintenance fixed the broken light in the hallway."', difficulty: 2 },
+      { word: 'Furnished', pos: 'adjective', definition: 'Containing furniture such as a bed, table, or sofa.', usage: '"A furnished room can be easier for students who just arrived."', difficulty: 2 },
+      { word: 'Tenancy', pos: 'noun', definition: 'The legal relationship between a renter and a property owner during a rental period.', usage: '"Tenancy rules explain each side’s rights and responsibilities."', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'emotions-communication', name: 'Emotions & Communication', icon: '☼', color: '#FDECEC',
+    tagline: 'Vocabulary for feelings, empathy, and clear conversation.',
+    keywords: ['emotions','communication','feelings','conversation','relationships'],
+    words: [
+      { word: 'Empathy', pos: 'noun', definition: 'The ability to understand and share another person’s feelings.', usage: '"Empathy makes teamwork and leadership more human."', difficulty: 1 },
+      { word: 'Boundary', pos: 'noun', definition: 'A limit that defines what a person is comfortable with emotionally, mentally, or physically.', usage: '"Setting a clear boundary helped protect her time and energy."', difficulty: 2 },
+      { word: 'Misunderstanding', pos: 'noun', definition: 'A failure to understand something correctly between people.', usage: '"A small misunderstanding can grow if nobody clarifies it."', difficulty: 2 },
+      { word: 'Reassure', pos: 'verb', definition: 'To make someone feel less worried by giving support or confidence.', usage: '"He reassured his teammate before the presentation started."', difficulty: 2 },
+      { word: 'Assertive', pos: 'adjective', definition: 'Able to express thoughts and needs clearly and confidently without being aggressive.', usage: '"Assertive communication can improve group work and negotiations."', difficulty: 3 },
+      { word: 'Nuance', pos: 'noun', definition: 'A subtle difference in meaning, feeling, or expression.', usage: '"Tone and context add nuance to both English and French conversations."', difficulty: 3 }
+    ]
+  }
+);
+
+CATEGORIES_FR.push(
+  {
+    id: 'sante-soins', name: 'Santé & soins', icon: '✚', color: '#F0FBF4',
+    tagline: 'Vocabulaire utile pour la clinique, le bien-être et les soins du quotidien.',
+    keywords: ['santé','soins','clinique','médecin','bien-être'],
+    words: [
+      { word: 'Ordonnance', pos: 'nom féminin', definition: 'Document rédigé par un professionnel de santé qui autorise un médicament ou un traitement.', usage: '« Le pharmacien a vérifié l’ordonnance avant de remettre le médicament. »', difficulty: 1 },
+      { word: 'Symptômes', pos: 'nom masculin pluriel', definition: 'Signes physiques ou mentaux qui peuvent indiquer une maladie ou un trouble.', usage: '« Elle a décrit ses symptômes clairement pour être mieux orientée. »', difficulty: 1 },
+      { word: 'Hydratation', pos: 'nom féminin', definition: 'Fait de boire assez d’eau ou de liquides pour que le corps fonctionne bien.', usage: '« Une bonne hydratation est essentielle pendant les longues journées d’étude. »', difficulty: 2 },
+      { word: 'Diagnostic', pos: 'nom masculin', definition: 'Identification d’une maladie ou d’un problème de santé à partir des signes observés et des examens.', usage: '« Le diagnostic a permis d’expliquer la suite du traitement. »', difficulty: 2 },
+      { word: 'Rééducation', pos: 'nom féminin', definition: 'Processus qui aide une personne à retrouver des capacités après une blessure ou une maladie.', usage: '« La rééducation a soutenu son rétablissement après l’opération. »', difficulty: 3 },
+      { word: 'Préventif', pos: 'adjectif', definition: 'Qui sert à éviter un problème ou une maladie avant qu’il n’apparaisse.', usage: '« Les soins préventifs incluent les bilans, les vaccins et les bonnes habitudes. »', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'voyage-transport', name: 'Voyage & transport', icon: '✈', color: '#EBF1FD',
+    tagline: 'Des mots utiles pour l’aéroport, le bus, le train et les déplacements.',
+    keywords: ['voyage','transport','trajet','billet','aéroport'],
+    words: [
+      { word: 'Itinéraire', pos: 'nom masculin', definition: 'Plan ou programme indiquant le trajet et les horaires d’un déplacement.', usage: '« Son itinéraire comprenait Toronto, Montréal et Québec. »', difficulty: 1 },
+      { word: 'Quai', pos: 'nom masculin', definition: 'Espace où les voyageurs montent dans un train ou en descendent.', usage: '« Le tableau d’affichage indiquait le quai du prochain train. »', difficulty: 1 },
+      { word: 'Escale', pos: 'nom féminin', definition: 'Arrêt intermédiaire au cours d’un voyage plus long, surtout en avion.', usage: '« Ils avaient une escale de deux heures avant leur correspondance. »', difficulty: 2 },
+      { word: 'Trajet', pos: 'nom masculin', definition: 'Parcours effectué d’un lieu à un autre.', usage: '« Son trajet quotidien entre la maison et le campus prend quarante minutes. »', difficulty: 2 },
+      { word: 'Orientation', pos: 'nom féminin', definition: 'Action de trouver son chemin ou de comprendre comment se déplacer dans un lieu.', usage: '« Une bonne orientation aide à se sentir plus à l’aise dans une nouvelle ville. »', difficulty: 2 },
+      { word: 'Débarquer', pos: 'verbe', definition: 'Quitter un avion, un train, un bus ou un bateau après un déplacement.', usage: '« Les passagers ont débarqué par les portes arrière. »', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'logement-location', name: 'Logement & location', icon: '⌂', color: '#FFF8E1',
+    tagline: 'Vocabulaire utile pour louer, déménager et s’installer.',
+    keywords: ['logement','location','appartement','bail','déménagement'],
+    words: [
+      { word: 'Bail', pos: 'nom masculin', definition: 'Contrat qui permet à une personne d’occuper un logement pendant une durée précise en échange d’un loyer.', usage: '« Elle a signé un bail d’un an pour l’appartement près du campus. »', difficulty: 1 },
+      { word: 'Dépôt', pos: 'nom masculin', definition: 'Somme payée à l’avance comme garantie contre des dommages ou un non-paiement.', usage: '« Le propriétaire a rendu le dépôt après l’état des lieux. »', difficulty: 1 },
+      { word: 'Charges', pos: 'nom féminin pluriel', definition: 'Frais liés aux services du logement comme l’électricité, l’eau, le chauffage ou Internet.', usage: '« Le loyer semblait raisonnable, mais les charges étaient en plus. »', difficulty: 2 },
+      { word: 'Entretien', pos: 'nom masculin', definition: 'Travail nécessaire pour garder un lieu ou un objet en bon état.', usage: '« L’entretien a réparé la lumière cassée dans le couloir. »', difficulty: 2 },
+      { word: 'Meublé', pos: 'adjectif', definition: 'Qui contient déjà des meubles comme un lit, une table ou un canapé.', usage: '« Une chambre meublée peut être pratique pour les étudiants qui viennent d’arriver. »', difficulty: 2 },
+      { word: 'Location', pos: 'nom féminin', definition: 'Situation juridique dans laquelle un locataire occupe un logement appartenant à quelqu’un d’autre.', usage: '« Les règles de location définissent les droits et devoirs de chacun. »', difficulty: 3 }
+    ]
+  },
+  {
+    id: 'emotions-communication-fr', name: 'Émotions & communication', icon: '☼', color: '#FDECEC',
+    tagline: 'Vocabulaire pour les sentiments, l’empathie et les échanges clairs.',
+    keywords: ['émotions','communication','sentiments','discussion','relations'],
+    words: [
+      { word: 'Empathie', pos: 'nom féminin', definition: 'Capacité à comprendre et ressentir ce que vit une autre personne.', usage: '« L’empathie rend le travail d’équipe plus humain. »', difficulty: 1 },
+      { word: 'Limite', pos: 'nom féminin', definition: 'Cadre personnel qui définit ce qui est acceptable ou non pour soi.', usage: '« Poser une limite claire a protégé son temps et son énergie. »', difficulty: 2 },
+      { word: 'Malentendu', pos: 'nom masculin', definition: 'Erreur de compréhension entre des personnes.', usage: '« Un petit malentendu peut grandir si personne ne clarifie la situation. »', difficulty: 2 },
+      { word: 'Rassurer', pos: 'verbe', definition: 'Aider quelqu’un à se sentir moins inquiet en apportant confiance et soutien.', usage: '« Il a rassuré sa coéquipière avant la présentation. »', difficulty: 2 },
+      { word: 'Assertif', pos: 'adjectif', definition: 'Qui exprime ses idées et ses besoins avec clarté et assurance, sans agressivité.', usage: '« Une communication assertive améliore souvent le travail de groupe. »', difficulty: 3 },
+      { word: 'Nuance', pos: 'nom féminin', definition: 'Différence subtile de sens, de ton ou d’expression.', usage: '« Le contexte et l’intonation apportent de la nuance à une conversation. »', difficulty: 3 }
+    ]
+  }
+);
+
+const ALL_CATEGORIES = { en: CATEGORIES_EN, fr: CATEGORIES_FR };
+
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let state = {
+  lang: 'en',
+  screen: 'home',
+  category: null,
+  words: [],
+  round: 0,
+  score: 0,
+  lives: 3,
+  maxLives: 3,
+  streak: 0,
+  answered: false,
+  totalRounds: 10,
+  lastWord: null,
+  lastCorrect: false,
+  correctCount: 0,
+  wrongAnswers: [],
+  hints: 2,
+  maxHints: 2,
+  hintUsedThisRound: false,
+  subjectQuery: '',
+  speechSupported: false,
+  voices: [],
+  sessionXp: 0,
+};
+
+function t() { return I18N[state.lang]; }
+function cats() {
+  return [...builtInCats(state.lang), ...getCustomCategories(state.lang)];
+}
+function visibleCats() {
+  const query = state.subjectQuery.trim().toLowerCase();
+  const all = cats();
+  if (!query) return all;
+  return all.filter(cat => {
+    const haystack = [cat.name, cat.tagline || '', ...(cat.keywords || []), ...(cat.words || []).slice(0, 4).map(w => w.word)].join(' ').toLowerCase();
+    return haystack.includes(query);
+  });
+}
+function announce(message) {
+  const el = document.getElementById('srAnnouncer');
+  if (!el) return;
+  el.textContent = '';
+  window.setTimeout(() => { el.textContent = message; }, 10);
+}
+function getAccuracy() {
+  const answered = Math.max(1, state.correctCount + (state.maxLives - state.lives));
+  return Math.round((state.correctCount / answered) * 100);
+}
+function getSpeechLocales() {
+  return state.lang === 'fr' ? ['fr-CA', 'fr-FR', 'fr'] : ['en-CA', 'en-US', 'en-GB', 'en'];
+}
+function refreshVoices() {
+  if (!('speechSynthesis' in window)) {
+    state.speechSupported = false;
+    state.voices = [];
+    return;
+  }
+  state.speechSupported = true;
+  state.voices = window.speechSynthesis.getVoices() || [];
+}
+function getPreferredVoice() {
+  const locales = getSpeechLocales().map(code => code.toLowerCase());
+  return state.voices.find(v => locales.some(code => v.lang && v.lang.toLowerCase().startsWith(code))) || state.voices[0] || null;
+}
+function updatePronunciationUI() {
+  const btn = document.getElementById('pronounceBtn');
+  const btnText = document.getElementById('pronounceBtnText');
+  const meta = document.getElementById('pronounceMeta');
+  if (!btn || !btnText || !meta) return;
+  btnText.textContent = t().listen;
+  const currentWord = state.lastWord?.word || '';
+  btn.setAttribute('aria-label', currentWord ? t().listenAria(currentWord) : t().listen);
+  btn.disabled = !state.speechSupported || !currentWord;
+  meta.textContent = state.speechSupported ? t().listenReady : t().listenUnavailable;
+}
+function speakCurrentWord(customText) {
+  const text = customText || state.lastWord?.word;
+  if (!text) return;
+  if (!('speechSynthesis' in window)) {
+    announce(t().listenUnavailable);
+    return;
+  }
+  refreshVoices();
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  const voice = getPreferredVoice();
+  if (voice) {
+    utterance.voice = voice;
+    utterance.lang = voice.lang;
+  } else {
+    utterance.lang = getSpeechLocales()[0];
+  }
+  const profile = getProfile();
+  utterance.rate = Number(profile.voiceRate || (state.lang === 'fr' ? 0.92 : 0.95));
+  utterance.pitch = 1;
+  window.speechSynthesis.speak(utterance);
+  announce(t().listenAria(text));
+}
+
+// ============================================================
+// PERSISTENCE — localStorage for best scores & stats
+// Key format: lexicon:<lang>:<catId> / lexicon:<lang>:stats
+// ============================================================
+function safeGet(key) {
+  try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; }
+}
+function safeSet(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getProfile() {
+  return safeGet('lexicon:profile') || {
+    displayName: '',
+    dailyGoal: 60,
+    mode: 'classic',
+    voiceRate: 0.95,
+  };
+}
+
+function saveProfile(nextProfile) {
+  safeSet('lexicon:profile', nextProfile);
+}
+
+function getXpState() {
+  const fallback = { totalXp: 0, dailyXp: 0, dailyDate: todayKey() };
+  const xp = safeGet('lexicon:xp') || fallback;
+  if (xp.dailyDate !== todayKey()) {
+    xp.dailyDate = todayKey();
+    xp.dailyXp = 0;
+    safeSet('lexicon:xp', xp);
+  }
+  return xp;
+}
+
+function setXpState(xp) {
+  safeSet('lexicon:xp', xp);
+}
+
+function awardXp(amount) {
+  const xp = getXpState();
+  xp.totalXp += amount;
+  xp.dailyXp += amount;
+  xp.dailyDate = todayKey();
+  setXpState(xp);
+  state.sessionXp = amount;
+  updateHeaderMeta();
+  return xp;
+}
+
+function getLevel(totalXp) {
+  return Math.floor(totalXp / 250) + 1;
+}
+
+function getReviewBank() {
+  return safeGet('lexicon:reviewBank') || { en: [], fr: [] };
+}
+
+function saveReviewBank(bank) {
+  safeSet('lexicon:reviewBank', bank);
+}
+
+function rememberMissedWords(words = []) {
+  if (!words.length) return;
+  const bank = getReviewBank();
+  const current = Array.isArray(bank[state.lang]) ? bank[state.lang] : [];
+  const next = [...current];
+  const seen = new Set(current.map(w => `${w.word}|${w.definition}`));
+  words.forEach(word => {
+    const key = `${word.word}|${word.definition}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    next.unshift(word);
+  });
+  bank[state.lang] = next.slice(0, 40);
+  saveReviewBank(bank);
+}
+
+function clearReviewBank(lang = state.lang) {
+  const bank = getReviewBank();
+  bank[lang] = [];
+  saveReviewBank(bank);
+  renderDashboard();
+  updateQuickActions();
+  announce(t().reviewCleared);
+}
+
+function getReviewWords(lang = state.lang) {
+  const bank = getReviewBank();
+  return Array.isArray(bank[lang]) ? bank[lang] : [];
+}
+
+function getModeConfig() {
+  const profile = getProfile();
+  if (profile.mode === 'challenge') {
+    return { totalRounds: 12, maxHints: 1, maxLives: 3 };
+  }
+  return { totalRounds: 10, maxHints: 2, maxLives: 3 };
+}
+
+function buildReviewCategory() {
+  const words = shuffle(getReviewWords()).slice(0, 12);
+  if (!words.length) return null;
+  return {
+    id: `review-${state.lang}`,
+    name: t().reviewMistakes,
+    icon: '↺',
+    color: '#FDECEC',
+    tagline: t().reviewReady(words.length),
+    keywords: ['review', 'mistakes', 'practice'],
+    words,
+  };
+}
+
+function buildRandomMixCategory() {
+  const pool = shuffle(cats()).slice(0, 6);
+  const mixed = [];
+  const seen = new Set();
+  pool.forEach(cat => {
+    shuffle(cat.words).slice(0, 3).forEach(word => {
+      const key = `${word.word}|${word.definition}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      mixed.push(word);
+    });
+  });
+  return {
+    id: `random-mix-${state.lang}`,
+    name: t().randomMix,
+    icon: '✦',
+    color: '#EBF1FD',
+    tagline: t().randomReady,
+    keywords: ['random', 'mix', 'explore'],
+    words: mixed.slice(0, 12),
+  };
+}
+
+function updateHeaderMeta() {
+  const xp = getXpState();
+  const el = document.getElementById('xpTodayDisplay');
+  const label = document.getElementById('xpLabel');
+  const profile = getProfile();
+  if (label) label.textContent = t().xpLabel;
+  if (el) el.textContent = `${xp.dailyXp} / ${profile.dailyGoal}`;
+}
+
+function renderDashboard() {
+  const grid = document.getElementById('dashboardGrid');
+  if (!grid) return;
+  const xp = getXpState();
+  const profile = getProfile();
+  const reviewCount = getReviewWords().length;
+  const goalPct = Math.min(100, Math.round((xp.dailyXp / Math.max(1, profile.dailyGoal)) * 100));
+  const level = getLevel(xp.totalXp);
+  const welcome = profile.displayName ? t().dashboardWelcome(profile.displayName) : t().dashboardWelcome();
+  grid.innerHTML = `
+    <div class="metric-card">
+      <div class="metric-top"><div class="metric-label">${t().xpLabel}</div><div>✦</div></div>
+      <div class="metric-num">${xp.dailyXp}</div>
+      <div class="metric-sub">${welcome}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-top"><div class="metric-label">${t().levelLabel}</div><div>◆</div></div>
+      <div class="metric-num">${level}</div>
+      <div class="metric-sub">${xp.totalXp} XP total</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-top"><div class="metric-label">${t().goalLabel}</div><div>${goalPct >= 100 ? '✓' : '→'}</div></div>
+      <div class="metric-num">${xp.dailyXp}/${profile.dailyGoal}</div>
+      <div class="goal-track"><div class="goal-fill" style="width:${goalPct}%"></div></div>
+      <div class="metric-sub">${goalPct >= 100 ? t().dailyGoalComplete : t().goalHint(goalPct)}</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-top"><div class="metric-label">${t().reviewLabel}</div><div>↺</div></div>
+      <div class="metric-num">${reviewCount}</div>
+      <div class="metric-sub">${reviewCount ? t().reviewReady(reviewCount) : t().reviewEmpty}</div>
+    </div>
+  `;
+}
+
+function renderPrefs() {
+  const profile = getProfile();
+  document.getElementById('prefsTitle').textContent = t().prefsTitle;
+  document.getElementById('prefsSub').textContent = t().prefsSub;
+  document.getElementById('profileNameLabel').textContent = t().profileNameLabel;
+  document.getElementById('dailyGoalLabel').textContent = t().dailyGoalLabel;
+  document.getElementById('modeLabel').textContent = t().modeLabel;
+  document.getElementById('voiceRateLabel').textContent = t().voiceRateLabel;
+  document.getElementById('voiceRateNote').textContent = t().voiceRateNote;
+  const nameInput = document.getElementById('profileNameInput');
+  const goalSelect = document.getElementById('dailyGoalSelect');
+  const modeSelect = document.getElementById('modeSelect');
+  const voiceRange = document.getElementById('voiceRateInput');
+  const voiceValue = document.getElementById('voiceRateValue');
+  const modeNote = document.getElementById('modeNote');
+  if (nameInput) {
+    nameInput.placeholder = t().profilePlaceholder;
+    nameInput.value = profile.displayName || '';
+  }
+  if (goalSelect) goalSelect.value = String(profile.dailyGoal || 60);
+  if (modeSelect) {
+    modeSelect.value = profile.mode || 'classic';
+    modeSelect.options[0].textContent = t().modeClassic;
+    modeSelect.options[1].textContent = t().modeChallenge;
+  }
+  if (voiceRange) voiceRange.value = String(profile.voiceRate || 0.95);
+  if (voiceValue) voiceValue.textContent = `${Number(profile.voiceRate || 0.95).toFixed(2)}×`;
+  if (modeNote) modeNote.textContent = profile.mode === 'challenge' ? t().modeChallengeHelp : t().modeClassicHelp;
+}
+
+function updateQuickActions() {
+  const reviewBtn = document.getElementById('reviewModeBtn');
+  const clearBtn = document.getElementById('clearReviewBtn');
+  const randomBtn = document.getElementById('randomMixBtn');
+  const reviewCount = getReviewWords().length;
+  if (randomBtn) randomBtn.textContent = t().randomMix;
+  if (reviewBtn) {
+    reviewBtn.textContent = reviewCount ? `${t().reviewMistakes} (${reviewCount})` : t().reviewMistakes;
+    reviewBtn.disabled = reviewCount === 0;
+    reviewBtn.hidden = false;
+  }
+  if (clearBtn) {
+    clearBtn.textContent = t().clearReview;
+    clearBtn.hidden = reviewCount === 0;
+  }
+}
+
+function seedStarterPack() {
+  const seeded = safeGet('lexicon:starterSeeded');
+  if (seeded) return;
+  mergeCustomPack(STARTER_PACK, { silent: true });
+  safeSet('lexicon:starterSeeded', true);
+}
+
+function getBestScore(catId) {
+  return safeGet(`lexicon:${state.lang}:${catId}`) || 0;
+}
+function setBestScore(catId, score) {
+  safeSet(`lexicon:${state.lang}:${catId}`, score);
+}
+
+function getStats() {
+  return safeGet(`lexicon:${state.lang}:stats`) || { rounds: 0, mastered: 0 };
+}
+function bumpStats(roundsPlayed, wordsRight) {
+  const s = getStats();
+  s.rounds += roundsPlayed;
+  s.mastered += wordsRight;
+  safeSet(`lexicon:${state.lang}:stats`, s);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  // Restore language preference
+  const savedLang = safeGet('lexicon:lang');
+  if (savedLang === 'en' || savedLang === 'fr') state.lang = savedLang;
+
+  document.documentElement.lang = state.lang;
+  seedStarterPack();
+  setupLangToggle();
+  setupHomeControls();
+  setupPreferences();
+  refreshVoices();
+  if ('speechSynthesis' in window && window.speechSynthesis.onvoiceschanged !== undefined) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      refreshVoices();
+      updatePronunciationUI();
+    };
+  }
+  applyLanguage();
+  renderDashboard();
+  renderPrefs();
+  updateQuickActions();
+  updateHeaderMeta();
+  const logo = document.querySelector('.logo');
+  if (logo) {
+    logo.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        goHome();
+      }
+    });
+  }
+  document.addEventListener('keydown', handleKeyDown);
+}
+
+function setupLangToggle() {
+  const opts = document.querySelectorAll('.lang-opt');
+  opts.forEach(opt => {
+    opt.onclick = () => setLanguage(opt.dataset.lang);
+    opt.onkeydown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        setLanguage(opt.dataset.lang);
+      }
+    };
+  });
+}
+
+
+
+function setupPreferences() {
+  const nameInput = document.getElementById('profileNameInput');
+  const goalSelect = document.getElementById('dailyGoalSelect');
+  const modeSelect = document.getElementById('modeSelect');
+  const voiceInput = document.getElementById('voiceRateInput');
+  const randomBtn = document.getElementById('randomMixBtn');
+  const reviewBtn = document.getElementById('reviewModeBtn');
+  const clearBtn = document.getElementById('clearReviewBtn');
+
+  nameInput?.addEventListener('input', (e) => {
+    const profile = getProfile();
+    profile.displayName = (e.target.value || '').trim();
+    saveProfile(profile);
+    renderDashboard();
+  });
+
+  goalSelect?.addEventListener('change', (e) => {
+    const profile = getProfile();
+    profile.dailyGoal = Number(e.target.value || 60);
+    saveProfile(profile);
+    renderDashboard();
+    updateHeaderMeta();
+    announce(t().prefsSaved);
+  });
+
+  modeSelect?.addEventListener('change', (e) => {
+    const profile = getProfile();
+    profile.mode = e.target.value === 'challenge' ? 'challenge' : 'classic';
+    saveProfile(profile);
+    renderPrefs();
+    announce(t().prefsSaved);
+  });
+
+  voiceInput?.addEventListener('input', (e) => {
+    const profile = getProfile();
+    profile.voiceRate = Number(e.target.value || 0.95);
+    saveProfile(profile);
+    renderPrefs();
+  });
+
+  randomBtn?.addEventListener('click', () => startGame(buildRandomMixCategory()));
+  reviewBtn?.addEventListener('click', () => {
+    const reviewCat = buildReviewCategory();
+    if (reviewCat) startGame(reviewCat);
+  });
+  clearBtn?.addEventListener('click', () => clearReviewBank());
+}
+
+function setImportStatus(message = '', kind = '') {
+  const el = document.getElementById('importStatus');
+  if (!el) return;
+  el.textContent = message;
+  el.className = 'import-status anim-fade-up stagger-3' + (kind ? ` ${kind}` : '');
+}
+
+
+let selectedPackFile = null;
+
+function setFileNameStatus(message = '', kind = '') {
+  const el = document.getElementById('fileNameStatus');
+  if (!el) return;
+  el.textContent = message;
+  el.className = 'file-name anim-fade-up stagger-3' + (kind ? ` ${kind}` : '');
+}
+
+function openPackPicker() {
+  const fileInput = document.getElementById('packFileInput');
+  if (!fileInput) return;
+  if (typeof fileInput.showPicker === 'function') {
+    try {
+      fileInput.showPicker();
+      return;
+    } catch (err) {
+      // fall through to click() for browsers that block showPicker
+    }
+  }
+  fileInput.click();
+}
+
+function readFileAsText(file) {
+  if (file && typeof file.text === 'function') {
+    return file.text();
+  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(reader.error || new Error('File could not be read.'));
+    reader.readAsText(file);
+  });
+}
+
+async function importSelectedPack() {
+  if (!selectedPackFile) {
+    setImportStatus(t().importPrompt);
+    openPackPicker();
+    return;
+  }
+  try {
+    setImportStatus(selectedPackFile.name);
+    const raw = await readFileAsText(selectedPackFile);
+    const parsed = JSON.parse(raw);
+    mergeCustomPack(parsed);
+    const fileInput = document.getElementById('packFileInput');
+    if (fileInput) fileInput.value = '';
+    selectedPackFile = null;
+    setFileNameStatus(t().fileNone);
+    const importBtn = document.getElementById('importPackBtn');
+    if (importBtn) importBtn.disabled = true;
+  } catch (err) {
+    setImportStatus(t().importError, 'error');
+    announce(t().importError);
+    alert(t().importError);
+  }
+}
+
+function loadStarterPack() {
+  mergeCustomPack(STARTER_PACK);
+  setImportStatus(t().starterReady, 'success');
+}
+
+function setupHomeControls() {
+  const search = document.getElementById('subjectSearch');
+  const importBtn = document.getElementById('importPackBtn');
+  const starterBtn = document.getElementById('starterPackBtn');
+  const fileInput = document.getElementById('packFileInput');
+  const chooseLabel = document.getElementById('importPackLabel');
+
+  search?.addEventListener('input', (e) => {
+    state.subjectQuery = e.target.value || '';
+    renderCategories();
+  });
+
+  importBtn?.addEventListener('click', importSelectedPack);
+  importBtn?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      importSelectedPack();
+    }
+  });
+
+  starterBtn?.addEventListener('click', loadStarterPack);
+
+  chooseLabel?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openPackPicker();
+    }
+  });
+
+  fileInput?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    selectedPackFile = file || null;
+    if (!file) {
+      setFileNameStatus(t().fileNone);
+      setImportStatus('');
+      if (importBtn) importBtn.disabled = true;
+      return;
+    }
+    setFileNameStatus(t().fileReady(file.name), 'ready');
+    setImportStatus(t().importReady);
+    if (importBtn) importBtn.disabled = false;
+  });
+
+  setFileNameStatus(t().fileNone);
+  if (importBtn) importBtn.disabled = !selectedPackFile;
+}
+
+function mergeCustomPack(payload, options = {}) {
+  const { silent = false } = options;
+  const store = safeGet('lexicon:customPacks') || { en: [], fr: [] };
+  const next = { en: [...(store.en || [])], fr: [...(store.fr || [])] };
+
+  const dedupe = (items = []) => {
+    const seen = new Set();
+    return items.filter(item => {
+      const key = `${item.id}|${item.name}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+
+  const consume = (lang, data) => {
+    if (!Array.isArray(data)) return 0;
+    const incoming = data.map(item => normalizeCategoryEntry(item, lang)).filter(Boolean);
+    if (!incoming.length) return 0;
+    next[lang] = dedupe([...next[lang], ...incoming]);
+    return incoming.length;
+  };
+
+  let added = 0;
+  if (Array.isArray(payload)) {
+    added += consume(state.lang, payload);
+  } else if (payload && typeof payload === 'object') {
+    if (Array.isArray(payload.categories)) added += consume(state.lang, payload.categories);
+    if (Array.isArray(payload.en)) added += consume('en', payload.en);
+    if (Array.isArray(payload.fr)) added += consume('fr', payload.fr);
+  }
+
+  if (!added) {
+    if (!silent) {
+      setImportStatus(t().importError, 'error');
+      announce(t().importError);
+      alert(t().importError);
+    }
+    return 0;
+  }
+
+  safeSet('lexicon:customPacks', next);
+  renderCategories();
+  if (!silent) {
+    setImportStatus(t().importSuccess(added), 'success');
+    announce(t().importSuccess(added));
+  }
+  return added;
+}
+
+function setLanguage(lang) {
+
+  if (state.lang === lang) return;
+  state.lang = lang;
+  safeSet('lexicon:lang', lang);
+  document.documentElement.lang = lang;
+  applyLanguage();
+  announce(lang === 'fr' ? 'Langue changée : français' : 'Language changed to English');
+}
+
+function applyLanguage() {
+  // Sync toggle UI
+  const opts = document.querySelectorAll('.lang-opt');
+  const slider = document.getElementById('langSlider');
+  opts.forEach(opt => {
+    const active = opt.dataset.lang === state.lang;
+    opt.classList.toggle('active', active);
+    if (active) {
+      slider.style.width = opt.offsetWidth + 'px';
+      slider.style.left = opt.offsetLeft + 'px';
+    }
+  });
+
+  // Static UI
+  document.getElementById('heroTitle').innerHTML = t().heroTitle;
+  document.getElementById('heroSub').textContent = t().heroSub;
+  document.getElementById('sectionLabel').textContent = t().sectionLabel;
+  document.getElementById('scoreLabel').textContent = t().scoreLabel;
+  document.getElementById('continueBtn').textContent = t().continue;
+  document.getElementById('hintBtnLabel').textContent = t().hint;
+  document.getElementById('kbHint').innerHTML = t().kbHint;
+  document.getElementById('footerText').textContent = t().footer;
+  document.getElementById('progressText').textContent = `${t().round} ${Math.min(state.round + 1, state.totalRounds)} / ${state.totalRounds}`;
+  document.getElementById('streakChip').textContent = `${t().streakLabel} ${state.streak}`;
+  document.getElementById('xpLabel').textContent = t().xpLabel;
+  document.getElementById('subjectSearch').placeholder = t().searchPlaceholder;
+  document.getElementById('subjectSearch').setAttribute('aria-label', t().searchAria);
+  document.getElementById('subjectSearchLabel').textContent = t().searchAria;
+  document.getElementById('importPackBtn').textContent = t().importPack;
+  const importPackLabel = document.getElementById('importPackLabel');
+  if (importPackLabel) importPackLabel.textContent = t().chooseFile;
+  const starterPackBtn = document.getElementById('starterPackBtn');
+  if (starterPackBtn) starterPackBtn.textContent = t().starterPack;
+  const fileStatusEl = document.getElementById('fileNameStatus');
+  if (fileStatusEl && !selectedPackFile) fileStatusEl.textContent = t().fileNone;
+  document.getElementById('noResults').textContent = t().noResults;
+
+  renderBestStrip();
+  renderDashboard();
+  renderPrefs();
+  updateQuickActions();
+  renderCategories();
+  updateHeaderMeta();
+  updatePronunciationUI();
+}
+
+function renderBestStrip() {
+  const strip = document.getElementById('bestStrip');
+  const stats = getStats();
+  // Global best
+  let globalBest = 0;
+  cats().forEach(c => { globalBest = Math.max(globalBest, getBestScore(c.id)); });
+
+  if (globalBest === 0 && stats.rounds === 0) {
+    strip.innerHTML = '';
+    strip.style.display = 'none';
+    return;
+  }
+  strip.style.display = 'flex';
+  strip.innerHTML = `
+    <div class="best-chip"><span class="val">${globalBest}</span><span class="lbl">${t().bestScore}</span></div>
+    <div class="best-chip"><span class="val">${stats.mastered}</span><span class="lbl">${t().totalWords}</span></div>
+    <div class="best-chip"><span class="val">${stats.rounds}</span><span class="lbl">${t().totalPlayed}</span></div>
+  `;
+}
+
+function renderCategories() {
+  const grid = document.getElementById('categoriesGrid');
+  const empty = document.getElementById('noResults');
+  const libraryNote = document.getElementById('libraryNote');
+  const customCount = getCustomCategories(state.lang).length;
+  const builtInCount = builtInCats(state.lang).length;
+  const results = visibleCats();
+
+  libraryNote.textContent = t().libraryNote(builtInCount, customCount);
+  grid.innerHTML = '';
+
+  if (!results.length) {
+    empty.hidden = false;
+    return;
+  }
+
+  empty.hidden = true;
+  results.forEach((cat, i) => {
+    const best = getBestScore(cat.id);
+    const btn = document.createElement('button');
+    btn.className = `cat-btn anim-fade-up stagger-${Math.min(i + 4, 10)}`;
+    btn.setAttribute('aria-label', `${cat.name}, ${cat.words.length} ${t().wordsLabel}`);
+    const customBadge = cat.id.includes('-custom') ? '<div class="cat-chip">Custom</div>' : '';
+    btn.innerHTML = `
+      <div class="cat-icon" style="background:${cat.color}">${cat.icon}</div>
+      <div class="cat-text">
+        <div class="cat-label">${cat.name}</div>
+        <div class="cat-count">${cat.words.length} ${t().wordsLabel}</div>
+        ${cat.tagline ? `<div class="cat-tagline">${cat.tagline}</div>` : ''}
+        ${customBadge}
+      </div>
+      ${best > 0 ? `<div class="cat-best filled" title="${t().highCat}">${best}</div>` : ''}
+    `;
+    btn.onclick = () => startGame(cat);
+    grid.appendChild(btn);
+  });
+}
+
+// ============================================================
+// SCREEN MANAGEMENT
+// ============================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(name + 'Screen').classList.add('active');
+  state.screen = name;
+
+  document.getElementById('headerHome').style.display = (name === 'game') ? 'none' : 'flex';
+  document.getElementById('headerGame').style.display = (name === 'game') ? 'flex' : 'none';
+
+  // Re-sync slider position after visibility toggle
+  if (name !== 'game') {
+    requestAnimationFrame(() => {
+      const active = document.querySelector('.lang-opt.active');
+      const slider = document.getElementById('langSlider');
+      if (active) {
+        slider.style.width = active.offsetWidth + 'px';
+        slider.style.left = active.offsetLeft + 'px';
+      }
+    });
+  }
+}
+
+function goHome() {
+  showScreen('home');
+  state.category = null;
+  renderBestStrip();
+  renderDashboard();
+  renderPrefs();
+  updateQuickActions();
+  renderCategories();
+  updateHeaderMeta();
+  updatePronunciationUI();
+}
+
+// ============================================================
+// START GAME
+// ============================================================
+function startGame(category) {
+  if (!category || !Array.isArray(category.words) || !category.words.length) return;
+  const mode = getModeConfig();
+  state.category = category;
+  state.round = 0;
+  state.score = 0;
+  state.totalRounds = mode.totalRounds;
+  state.maxHints = mode.maxHints;
+  state.maxLives = mode.maxLives;
+  state.lives = state.maxLives;
+  state.streak = 0;
+  state.answered = false;
+  state.correctCount = 0;
+  state.wrongAnswers = [];
+  state.hints = state.maxHints;
+  state.hintUsedThisRound = false;
+  state.sessionXp = 0;
+
+  const words = [...category.words];
+  const easy = shuffle(words.filter(w => w.difficulty === 1));
+  const medium = shuffle(words.filter(w => w.difficulty === 2));
+  const hard = shuffle(words.filter(w => w.difficulty === 3));
+  state.words = [...easy, ...medium, ...hard].slice(0, state.totalRounds);
+
+  updateScore();
+  updateLives();
+  updateHints();
+  showScreen('game');
+  announce(`${state.lang === 'fr' ? 'Début du thème' : 'Starting category'} ${category.name}`);
+  loadRound();
+}
+
+// ============================================================
+// LOAD ROUND
+// ============================================================
+function loadRound() {
+  if (state.round >= state.words.length || state.lives <= 0) {
+    endGame();
+    return;
+  }
+
+  state.answered = false;
+  state.hintUsedThisRound = false;
+  const word = state.words[state.round];
+  state.lastWord = word;
+
+  document.getElementById('roundLabel').textContent = `${t().round} ${state.round + 1}`;
+  document.getElementById('progressText').textContent = `${t().round} ${state.round + 1} / ${state.words.length}`;
+  document.getElementById('streakChip').textContent = `${t().streakLabel} ${state.streak}`;
+
+  const diff = word.difficulty;
+  const diffLabel = document.getElementById('diffLabel');
+  diffLabel.textContent = diff === 1 ? t().easy : diff === 2 ? t().medium : t().hard;
+  diffLabel.className = 'difficulty-label ' + (diff === 1 ? 'diff-easy' : diff === 2 ? 'diff-medium' : 'diff-hard');
+
+  const wordEl = document.getElementById('wordDisplay');
+  // Reset animation
+  wordEl.classList.remove('anim-fade-up');
+  void wordEl.offsetWidth;
+  wordEl.textContent = word.word;
+  wordEl.classList.add('anim-fade-up');
+
+  document.getElementById('wordPos').textContent = word.pos;
+  document.getElementById('progressBar').style.width = ((state.round) / state.words.length * 100) + '%';
+
+  // Build choices
+  const distractors = getDistractors(word, state.category.words, 2);
+  const choices = shuffle([
+    { text: word.definition, correct: true },
+    ...distractors.map(d => ({ text: d.definition, correct: false }))
+  ]);
+
+  const container = document.getElementById('choicesContainer');
+  container.innerHTML = '';
+  const keys = ['A', 'B', 'C'];
+  choices.forEach((ch, i) => {
+    const btn = document.createElement('button');
+    btn.className = `choice-btn anim-fade-up stagger-${i + 2}`;
+    btn.innerHTML = `
+      <div class="choice-key">${keys[i]}</div>
+      <div class="choice-text">${ch.text}</div>
+    `;
+    btn.dataset.correct = ch.correct;
+    btn.dataset.index = i;
+    btn.onclick = () => selectChoice(btn, ch.correct, container);
+    container.appendChild(btn);
+  });
+
+  // Reset usage reveal
+  const reveal = document.getElementById('usageReveal');
+  reveal.className = 'usage-reveal';
+  reveal.textContent = '';
+
+  document.getElementById('continueBar').classList.remove('show');
+  document.getElementById('hintBar').style.display = 'flex';
+  document.getElementById('kbHint').style.opacity = '1';
+  updateHints();
+  updatePronunciationUI();
+}
+
+function getDistractors(word, pool, count) {
+  const sameDifficulty = pool.filter(w => w.word !== word.word && w.difficulty === word.difficulty);
+  const adjacent = pool.filter(w => w.word !== word.word && Math.abs(w.difficulty - word.difficulty) === 1);
+  const fallback = pool.filter(w => w.word !== word.word && w.difficulty !== word.difficulty);
+  return shuffle([...sameDifficulty, ...adjacent, ...fallback]).slice(0, count);
+}
+
+// ============================================================
+// HINTS — 50/50: hide one wrong answer
+// ============================================================
+function useHint() {
+  if (state.answered || state.hints <= 0 || state.hintUsedThisRound) return;
+
+  const btns = [...document.querySelectorAll('#choicesContainer .choice-btn')];
+  const wrongBtns = btns.filter(b => b.dataset.correct === 'false' && !b.classList.contains('hidden-hint'));
+  if (wrongBtns.length === 0) return;
+
+  const target = wrongBtns[Math.floor(Math.random() * wrongBtns.length)];
+  target.classList.add('hidden-hint');
+
+  state.hints--;
+  state.hintUsedThisRound = true;
+  updateHints();
+  announce(state.lang === 'fr' ? 'Indice utilisé' : 'Hint used');
+}
+
+function updateHints() {
+  const btn = document.getElementById('hintBtn');
+  btn.disabled = state.hints <= 0 || state.answered || state.hintUsedThisRound;
+
+  const dots = document.getElementById('hintDots');
+  dots.innerHTML = '';
+  for (let i = 0; i < state.maxHints; i++) {
+    const d = document.createElement('div');
+    d.className = 'hint-dot' + (i >= state.hints ? ' used' : '');
+    dots.appendChild(d);
+  }
+}
+
+// ============================================================
+// SELECT CHOICE
+// ============================================================
+function selectChoice(btn, isCorrect, container) {
+  if (state.answered) return;
+  if (btn.classList.contains('hidden-hint')) return;
+  state.answered = true;
+
+  const allBtns = container.querySelectorAll('.choice-btn');
+  const word = state.words[state.round];
+
+  if (isCorrect) {
+    btn.classList.add('correct');
+    state.streak++;
+    const basePoints = word.difficulty * 10;
+    const streakBonus = state.streak >= 3 ? Math.min(state.streak, 5) * 5 : 0;
+    state.score += basePoints + streakBonus;
+    state.correctCount++;
+    state.lastCorrect = true;
+    if (state.streak >= 3) showStreakToast(state.streak);
+    announce(state.lang === 'fr' ? 'Bonne réponse' : 'Correct answer');
+  } else {
+    btn.classList.add('wrong', 'anim-shake');
+    state.lives--;
+    state.streak = 0;
+    state.lastCorrect = false;
+    state.wrongAnswers.push(word);
+    allBtns.forEach(b => {
+      if (b.dataset.correct === 'true') b.classList.add('reveal-correct');
+    });
+    updateLives();
+    announce(state.lang === 'fr' ? 'Mauvaise réponse' : 'Wrong answer');
+  }
+
+  allBtns.forEach(b => b.classList.add('disabled'));
+
+  // Reveal usage example
+  const reveal = document.getElementById('usageReveal');
+  reveal.textContent = word.usage;
+  reveal.className = 'usage-reveal show ' + (isCorrect ? 'correct-style' : 'wrong-style');
+
+  updateScore();
+  updateHints();
+  document.getElementById('streakChip').textContent = `${t().streakLabel} ${state.streak}`;
+  document.getElementById('continueBar').classList.add('show');
+  document.getElementById('hintBar').style.display = 'none';
+  document.getElementById('kbHint').style.opacity = '0.4';
+  document.getElementById('continueBtn').focus();
+}
+
+// ============================================================
+// NEXT ROUND
+// ============================================================
+function nextRound() {
+  state.round++;
+  loadRound();
+}
+
+// ============================================================
+// END GAME
+// ============================================================
+function endGame() {
+  const won = state.lives > 0;
+  const word = state.lastWord;
+  const total = state.round;
+
+  document.getElementById('progressBar').style.width = '100%';
+
+  // Persist stats + check record
+  bumpStats(total, state.correctCount);
+  rememberMissedWords(state.wrongAnswers);
+  const sessionXp = Math.max(Math.round(state.correctCount * 8 + state.score / 8 + (won ? 10 : 0)), 0);
+  awardXp(sessionXp);
+  const prevBest = getBestScore(state.category.id);
+  const isRecord = state.score > prevBest;
+  if (isRecord) setBestScore(state.category.id, state.score);
+
+  const accuracy = getAccuracy();
+  let html = `
+    <div class="result-icon anim-fade-up">${won ? '◆' : '◇'}</div>
+    <h2 class="result-title anim-fade-up stagger-1">${won ? t().wellDone : t().gameOver}</h2>
+    <p class="result-subtitle anim-fade-up stagger-2">${won ? t().resultWin(state.category.name, state.lives) : t().resultLoss(state.category.name, state.round)}</p>
+    <div class="accuracy-pill anim-fade-up stagger-2">${accuracy}% ${t().accuracyLabel}</div>
+    <div class="session-chip anim-fade-up stagger-2">+${sessionXp} XP</div>
+    <div class="result-stats anim-fade-up stagger-3">
+      <div class="stat"><div class="stat-num">${state.score}</div><div class="stat-label">${t().score}</div></div>
+      <div class="stat"><div class="stat-num">${state.correctCount}/${total}</div><div class="stat-label">${t().correct}</div></div>
+      <div class="stat"><div class="stat-num">${state.maxLives - state.lives}</div><div class="stat-label">${t().strikes}</div></div>
+    </div>
+    ${isRecord && state.score > 0 ? `<div class="record-badge anim-fade-up stagger-4">✦ ${t().newRecord}</div>` : `<div class="record-spacer"></div>`}
+  `;
+
+  if (word) {
+    html += `
+    <div class="review-card anim-fade-up stagger-4">
+      <div class="review-card-label">${state.lastCorrect ? t().lastCorrect : t().lastIncorrect}</div>
+      <div class="review-word">${word.word}</div>
+      <div class="review-pos">${word.pos}</div>
+      <div class="review-def">${word.definition}</div>
+      <div class="review-usage">${word.usage}</div>
+    </div>`;
+  }
+
+  const wrongToShow = state.wrongAnswers.filter(w => w.word !== word?.word);
+  if (wrongToShow.length > 0) {
+    html += `<div style="max-width:480px;margin:0 auto 24px;width:100%;">`;
+    wrongToShow.forEach(w => {
+      html += `
+      <div class="review-card anim-fade-up stagger-5" style="margin-bottom:12px;">
+        <div class="review-card-label">${t().missed}</div>
+        <div class="review-word">${w.word}</div>
+        <div class="review-pos">${w.pos}</div>
+        <div class="review-def">${w.definition}</div>
+        <div class="review-usage">${w.usage}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `
+    <div class="result-actions anim-fade-up stagger-6">
+      <button class="btn-primary" onclick="startGame(state.category)">${t().playAgain}</button>
+      ${state.wrongAnswers.length ? `<button class="btn-secondary" onclick="startGame(buildReviewCategory())">${t().reviewMistakes}</button>` : ''}
+      <button class="btn-secondary" onclick="goHome()">${t().changeSubject}</button>
+    </div>`;
+
+  document.getElementById('resultContent').innerHTML = html;
+  showScreen('result');
+}
+
+// ============================================================
+// UI UPDATES
+// ============================================================
+function updateScore() {
+  document.getElementById('scoreDisplay').textContent = state.score;
+}
+
+function updateLives() {
+  const container = document.getElementById('livesDisplay');
+  container.innerHTML = '';
+  for (let i = 0; i < state.maxLives; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'life-dot' + (i >= state.lives ? ' lost' : '');
+    container.appendChild(dot);
+  }
+}
+
+// ============================================================
+// KEYBOARD
+// ============================================================
+function handleKeyDown(e) {
+  if (state.screen !== 'game') return;
+
+  if (!state.answered) {
+    const idx = { '1': 0, '2': 1, '3': 2 }[e.key];
+    if (idx !== undefined) {
+      const btns = document.querySelectorAll('#choicesContainer .choice-btn');
+      if (btns[idx] && !btns[idx].classList.contains('hidden-hint')) btns[idx].click();
+    }
+    if (e.key === 'h' || e.key === 'H') {
+      useHint();
+    }
+    if (e.key === 's' || e.key === 'S') {
+      e.preventDefault();
+      speakCurrentWord();
+    }
+  } else {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      nextRound();
+    }
+  }
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function showStreakToast(streak) {
+  const toast = document.getElementById('streakToast');
+  toast.textContent = t().streak(streak);
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 1800);
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Start
+init();
+</script>
+</body>
+</html>
